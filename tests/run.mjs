@@ -134,6 +134,33 @@ console.log('markdown:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+// ---- one sin, one finding, even when two extractors see it ----
+console.log('dedup:');
+{
+  const dir = makeRepo();
+  writeFileSync(join(dir, 'components/Promo.tsx'),
+    'export const Promo = () => <div className="bg-[#4a7be8]" style={{color: "#4a7be8"}}>go</div>;\n');
+  const r = run(dir);
+  const colours = r.findings.filter((f) => f.kind === 'color' && f.value === '#4a7be8');
+  ok(colours.length === 1, `#4a7be8 on one line is one finding (got ${colours.length})`);
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ---- a Badge that is plain UI is guarded; a Badge that draws SVG is not ----
+console.log('artwork exemption earns itself:');
+{
+  const dir = makeRepo();
+  writeFileSync(join(dir, 'components/PromoBadge.tsx'),
+    'export const PromoBadge = () => <span style={{background: "#70b1ec"}}>new</span>;\n');
+  const r = run(dir);
+  ok(r.findings.some((f) => f.file.includes('PromoBadge')), 'styled Badge component is judged');
+  writeFileSync(join(dir, 'components/ShieldBadge.tsx'),
+    'export const ShieldBadge = () => <svg><path fill="#ff8800" d="M0 0"/></svg>;\n');
+  const r2 = run(dir);
+  ok(!r2.findings.some((f) => f.file.includes('ShieldBadge')), 'SVG-drawing badge stays exempt');
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ---- --version ----
 console.log('version flag:');
 {

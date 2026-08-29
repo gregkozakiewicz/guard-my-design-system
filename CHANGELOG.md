@@ -4,6 +4,22 @@ The promise behind every number: a patch release never changes what gets
 flagged. If a version flags something new, it is a minor or major bump and
 this file says what, in one plain line.
 
+## 1.1.0 — 29 Aug 2026
+
+Field-tested against three public repos (vercel/ai-chatbot, excalidraw,
+shadcn-ui) plus the no-GitHub cases: master-only repos, repos with no remote,
+and the detached-HEAD state GitLab and Bitbucket CI run in. Two catches:
+
+- **Now flagged, wasn't before:** styling in components whose filename sounds
+  like artwork (Badge, Icon, Logo…). These were exempt wholesale, inherited
+  from the scanner's SVG-artwork rule, which left every Badge component
+  unguarded. The exemption now has to earn itself: such a file is only exempt
+  when its added lines actually draw SVG. This is the minor bump.
+- Fixed: a hex inside a Tailwind class was also counted by the raw sweep, so
+  one sin on one line could appear twice. One sin, one finding.
+
+Suite grows from 16 to 19 checks.
+
 ## 1.0.3 — 29 Aug 2026
 
 Greg typed `--version` in his home folder and got four raw git fatals for his
