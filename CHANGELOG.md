@@ -4,6 +4,14 @@ The promise behind every number: a patch release never changes what gets
 flagged. If a version flags something new, it is a minor or major bump and
 this file says what, in one plain line.
 
+## 1.0.3 — 29 Aug 2026
+
+Greg typed `--version` in his home folder and got four raw git fatals for his
+trouble. Two fixes from one screenshot: `--version` (and `-v`) now answers
+with the version, and running outside a git repository gets one calm sentence
+instead of git's own noise. The README's command table also holds its column
+width. Same rules, same flags, nothing new is judged.
+
 ## 1.0.2 — 29 Aug 2026
 
 The shop window. The README grows up to match roast's: the slogan on top,

@@ -7,7 +7,7 @@
  *   node tests/run.mjs
  */
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, appendFileSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, appendFileSync, mkdirSync, rmSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -131,6 +131,27 @@ console.log('markdown:');
   ok(md.includes('guard-my-design-system: 1 new issue'), 'markdown header counts issues');
   ok(md.includes('npx roast-my-design-system'), 'markdown carries the roast footer');
   ok(md.includes('never judged'), 'markdown states the diff-only promise');
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ---- --version ----
+console.log('version flag:');
+{
+  const v = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version;
+  const out = execFileSync('node', [CLI, '--version'], { encoding: 'utf8' }).trim();
+  ok(out === `guard-my-design-system ${v}`, `--version prints the package version (${out})`);
+}
+
+// ---- outside a git repository ----
+console.log('not a git repo:');
+{
+  const dir = mkdtempSync(join(tmpdir(), 'guard-nogit-'));
+  let code = 0, err = '';
+  try { execFileSync('node', [CLI, dir], { encoding: 'utf8' }); }
+  catch (e) { code = e.status; err = e.stderr ?? ''; }
+  ok(code === 2, `exits 2 outside a repo (got ${code})`);
+  ok(err.includes('not a git repository') && !err.includes('fatal:'),
+    'one calm sentence, no raw git noise');
   rmSync(dir, { recursive: true, force: true });
 }
 

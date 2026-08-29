@@ -11,7 +11,7 @@ import { join } from 'node:path';
 export function defaultBase(cwd) {
   for (const ref of ['origin/main', 'origin/master', 'main', 'master']) {
     try {
-      return execFileSync('git', ['merge-base', 'HEAD', ref], { cwd, encoding: 'utf8' }).trim();
+      return execFileSync('git', ['merge-base', 'HEAD', ref], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
     } catch { /* try the next spelling */ }
   }
   return null;

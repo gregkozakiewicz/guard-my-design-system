@@ -13,6 +13,8 @@
  * --strict, 2 could not run.
  */
 import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { learnSystem } from 'roast-my-design-system/engine';
 import { defaultBase, addedLines } from './src/diff.mjs';
 import { judge } from './src/judge.mjs';
@@ -25,7 +27,22 @@ const opt = (name) => {
   return i > -1 && argv[i + 1] ? argv[i + 1] : null;
 };
 
+if (flag('version') || argv.includes('-v')) {
+  const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+  console.log(`guard-my-design-system ${pkg.version}`);
+  process.exit(0);
+}
+
 const cwd = resolve(argv[0] && !argv[0].startsWith('--') ? argv[0] : '.');
+
+// The guard judges diffs, so a git repository is its whole world. Say so
+// calmly instead of letting git's own fatals leak through.
+try {
+  execFileSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, stdio: 'ignore' });
+} catch {
+  console.error('guard: this is not a git repository, and the guard judges diffs. Run it inside a repo.');
+  process.exit(2);
+}
 const base = opt('base') ?? defaultBase(cwd);
 if (!base) {
   console.error('guard: cannot find a base to diff against (no origin/main, origin/master, main or master). Pass one with --base <ref>.');
