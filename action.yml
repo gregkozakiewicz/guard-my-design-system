@@ -1,0 +1,36 @@
+name: guard-my-design-system
+description: "No new mess. Checks only the lines a pull request adds against the design system the repo already has."
+branding:
+  icon: shield
+  color: gray-dark
+
+inputs:
+  strict:
+    description: "Fail the check instead of commenting (true/false)"
+    default: "false"
+  exclude:
+    description: "Comma-separated repo-relative paths to leave out of the system scan"
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Guard the diff
+      shell: bash
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        STRICT: ${{ inputs.strict }}
+        EXCLUDE: ${{ inputs.exclude }}
+      run: |
+        git fetch --no-tags --depth=1 origin "$BASE_SHA" 2>/dev/null || true
+        ARGS=(--base "$BASE_SHA" --json)
+        [ -n "$EXCLUDE" ] && ARGS+=(--exclude "$EXCLUDE")
+        npx -y guard-my-design-system "${ARGS[@]}" > guard-findings.json
+        node ${{ github.action_path }}/scripts/pr-comment.mjs guard-findings.json
+        if [ "$STRICT" = "true" ]; then
+          COUNT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('guard-findings.json','utf8')).findings.length)")
+          if [ "$COUNT" != "0" ]; then
+            echo "guard: $COUNT new issue(s) — strict mode fails the check"
+            exit 1
+          fi
+        fi

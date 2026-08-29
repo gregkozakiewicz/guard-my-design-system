@@ -1,14 +1,18 @@
 {
   "name": "guard-my-design-system",
-  "version": "0.0.1",
-  "description": "No new mess. A pull request guard that stops design system drift one diff at a time. Coming soon.",
+  "version": "1.0.0",
+  "description": "No new mess. A pull request guard that judges only the lines a change adds against the design system the repo already has, and names the on-system value the author probably meant.",
   "type": "module",
   "bin": {
     "guard-my-design-system": "index.mjs"
   },
   "files": [
-    "index.mjs"
+    "index.mjs",
+    "src/"
   ],
+  "dependencies": {
+    "roast-my-design-system": "5.5.2"
+  },
   "keywords": [
     "design-system",
     "design-tokens",

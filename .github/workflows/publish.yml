@@ -1,0 +1,53 @@
+# Publishes to npm when a version tag (v1.0.0 style) is pushed. Same
+# discipline as roast-my-design-system: never `npm publish` from a laptop
+# (the 0.0.1 name reservation was the one sanctioned exception).
+#
+# npm uses Trusted Publishing: no tokens, no secrets — npmjs.com is configured
+# to trust this exact workflow, and npm attaches provenance automatically.
+name: publish
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write # OIDC token for npm trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs a recent npm
+      - run: npm install -g npm@latest
+
+      - name: Check the tag matches package.json
+        run: |
+          TAG=${GITHUB_REF_NAME#v}
+          PKG=$(node -p "require('./package.json').version")
+          if [ "$PKG" != "$TAG" ]; then
+            echo "Tag v$TAG does not match package.json $PKG" >&2
+            exit 1
+          fi
+
+      - run: npm install
+
+      # The gate: known sins must be seen, clean changes must stay silent
+      - name: Tests
+        run: node tests/run.mjs
+
+      # Smoke test: the CLI must judge its own repo without falling over
+      - name: Smoke test
+        run: |
+          git fetch --deepen=50 origin main || true
+          node index.mjs . --base HEAD --json > /tmp/self-guard.json
+          test -s /tmp/self-guard.json
+
+      - run: npm publish
