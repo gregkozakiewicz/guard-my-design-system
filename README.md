@@ -123,6 +123,28 @@ Requires Node 18+ and git.
   on-system value the author probably meant, so the fix takes thirty seconds
   and no meeting.
 
+## Honest limits
+
+Things the guard deliberately does not do, said here so they never surprise you
+in a pull request:
+
+- **Monorepos are judged as one world.** The system is learned from the whole
+  repo, so a colour that is legitimate in `packages/ui` counts as known when it
+  appears in `apps/web`. Per-package judgement is roast's territory today.
+- **Spacing is compared within one unit.** A repo on a rem scale that receives
+  `13px` gets the flag, but "nearest existing value" never converts units:
+  claiming `0.75rem` is nearest to `13px` would be a judgement faked, not made.
+- **Taste is not judged, and tokens are a passport.** The right token in the
+  wrong place sails through, and defining a new token is never a sin. The
+  guard polices drift, not decisions: extending the system is legitimate work.
+- **On a fork's pull request, the comment cannot be posted** (GitHub hands the
+  workflow a read-only token). The guard still runs; the verdict lands in the
+  workflow log instead, with a line saying why. The same happens if the
+  workflow is missing `pull-requests: write`.
+- **Not on GitHub?** The CLI works anywhere git works: GitLab and Bitbucket CI
+  can run `npx guard-my-design-system --strict --base <target branch sha>` and
+  get the failing check. Only the comment-posting Action is GitHub-specific.
+
 ## The family
 
 [roast-my-design-system](https://github.com/gregkozakiewicz/roast-my-design-system)

@@ -4,6 +4,22 @@ The promise behind every number: a patch release never changes what gets
 flagged. If a version flags something new, it is a minor or major bump and
 this file says what, in one plain line.
 
+## 1.1.1 — 29 Aug 2026
+
+Transparency release. Nothing new is flagged; two things can only flag less.
+
+- `--exclude` and `.roastignore` now scope the judging as well as the
+  learning: a folder you excluded is invisible to the whole tool, not judged
+  against a system that deliberately ignores it.
+- On a fork's pull request (read-only token) or a workflow missing
+  `pull-requests: write`, the comment step no longer fails red: the verdict
+  prints into the log with one line saying why it could not be posted.
+- The README gains **Honest limits**: monorepos judged as one world, same-unit
+  spacing comparison, taste not judged and tokens as a passport, the fork
+  case, and the GitLab/Bitbucket recipe.
+
+Suite grows to 21 checks.
+
 ## 1.1.0 — 29 Aug 2026
 
 Field-tested against three public repos (vercel/ai-chatbot, excalidraw,

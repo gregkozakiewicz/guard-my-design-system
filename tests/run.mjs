@@ -161,6 +161,20 @@ console.log('artwork exemption earns itself:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+// ---- excluded folders are invisible to the judge too ----
+console.log('exclusions:');
+{
+  const dir = makeRepo();
+  mkdirSync(join(dir, 'lab'), { recursive: true });
+  writeFileSync(join(dir, '.roastignore'), 'lab/\n');
+  writeFileSync(join(dir, 'lab/experiment.css'), '.x { color: #cc0011; margin: 17px; }\n');
+  const r = run(dir);
+  ok(r.findings.length === 0, '.roastignore folder is not judged');
+  const r2 = JSON.parse(execFileSync('node', [CLI, dir, '--base', 'HEAD', '--json', '--exclude', 'lab/'], { encoding: 'utf8' }));
+  ok(r2.findings.length === 0, '--exclude folder is not judged');
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ---- --version ----
 console.log('version flag:');
 {

@@ -58,8 +58,20 @@ try {
 }
 
 const exclude = opt('exclude') ? opt('exclude').split(',').map((s) => s.trim()) : [];
+
+// Excluded folders are invisible to the whole tool: not learned from, and not
+// judged either. Same sources as the scan (--exclude and .roastignore), same
+// plain folder prefixes, nothing clever.
+let ignorePrefixes = [...exclude];
+try {
+  ignorePrefixes.push(...readFileSync(resolve(cwd, '.roastignore'), 'utf8')
+    .split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#')));
+} catch { /* no .roastignore, nothing to add */ }
+ignorePrefixes = ignorePrefixes.map((p) => p.replace(/^\.?\//, '').replace(/\/?$/, '/'));
+const judged = added.filter(({ file }) => !ignorePrefixes.some((p) => (file + '/').startsWith(p)));
+
 const system = learnSystem(cwd, { exclude });
-const findings = judge(added, system);
+const findings = judge(judged, system);
 
 if (flag('json')) {
   console.log(JSON.stringify({ base, addedLines: added.length, findings }, null, 2));

@@ -41,13 +41,22 @@ const api = async (path, init = {}) => {
   return res.json();
 };
 
-const comments = await api(`/repos/${repo}/issues/${pr}/comments?per_page=100`);
-const mine = comments.find((c) => c.body?.startsWith(MARKER));
+try {
+  const comments = await api(`/repos/${repo}/issues/${pr}/comments?per_page=100`);
+  const mine = comments.find((c) => c.body?.startsWith(MARKER));
 
-if (mine) {
-  await api(`/repos/${repo}/issues/comments/${mine.id}`, { method: 'PATCH', body: JSON.stringify({ body }) });
-  console.log(`guard: updated comment on #${pr} (${findings.length} finding${findings.length === 1 ? '' : 's'})`);
-} else {
-  await api(`/repos/${repo}/issues/${pr}/comments`, { method: 'POST', body: JSON.stringify({ body }) });
-  console.log(`guard: commented on #${pr} (${findings.length} finding${findings.length === 1 ? '' : 's'})`);
+  if (mine) {
+    await api(`/repos/${repo}/issues/comments/${mine.id}`, { method: 'PATCH', body: JSON.stringify({ body }) });
+    console.log(`guard: updated comment on #${pr} (${findings.length} finding${findings.length === 1 ? '' : 's'})`);
+  } else {
+    await api(`/repos/${repo}/issues/${pr}/comments`, { method: 'POST', body: JSON.stringify({ body }) });
+    console.log(`guard: commented on #${pr} (${findings.length} finding${findings.length === 1 ? '' : 's'})`);
+  }
+} catch (e) {
+  // A fork PR's token is read-only, and a workflow without pull-requests:
+  // write cannot comment either. The guard still did its job; the verdict
+  // just lands in the log instead of on the pull request.
+  console.log(markdownReport(findings));
+  console.log(`\nguard: could not post the comment (usually a fork PR's read-only token, or the workflow is missing "pull-requests: write"). The verdict is above instead. (${e.message.split('\n')[0]})`);
+  process.exit(0);
 }
