@@ -1,0 +1,35 @@
+{
+  "name": "guard-my-design-system",
+  "version": "0.0.1",
+  "description": "No new mess. A pull request guard that stops design system drift one diff at a time. Coming soon.",
+  "type": "module",
+  "bin": {
+    "guard-my-design-system": "index.mjs"
+  },
+  "files": [
+    "index.mjs"
+  ],
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "lint",
+    "ci",
+    "pull-request",
+    "code-review",
+    "tailwind",
+    "css"
+  ],
+  "author": "Greg Kozakiewicz (https://gregkozakiewicz.com)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gregkozakiewicz/guard-my-design-system.git"
+  },
+  "homepage": "https://github.com/gregkozakiewicz/guard-my-design-system#readme",
+  "bugs": {
+    "url": "https://github.com/gregkozakiewicz/guard-my-design-system/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
