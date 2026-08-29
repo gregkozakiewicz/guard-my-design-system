@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>guard-my-design-system · No new mess. A pull request guard for your design system</title>
+<meta name="description" content="Your design system dies one pull request at a time. This makes sure it doesn't. A guard that judges only the lines a change adds, against the system the repo already has, and names the on-system value the author probably meant. One sticky comment per pull request via the GitHub Action; strict mode fails the check.">
+<style>
+  :root { --bg:#020617; --card:rgba(15,23,42,.6); --line:rgba(51,65,85,.7); --text:#f1f5f9; --dim:#94a3b8; --dim2:#64748b; --mint:#2dd4bf;
+    --glow1:rgba(45,212,191,.08); --glow2:rgba(56,189,248,.06);
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace; }
+  html[data-theme="light"] { --bg:#eeecfb; --card:rgba(255,255,255,.6); --line:rgba(15,15,26,.1); --text:#0f0f1a; --dim:#6b6b85; --dim2:#9494ad;
+    --mint:#5a44f0; --glow1:#d8d1f7; --glow2:#e8e3fb; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { color:var(--text); font:16px/1.6 'Manrope',ui-sans-serif,system-ui,sans-serif; background:var(--bg); }
+  body::before { content:''; position:fixed; inset:0; z-index:-1; background:
+    radial-gradient(1200px 600px at 10% -10%, var(--glow1) 0%, transparent 60%),
+    radial-gradient(900px 500px at 100% 10%, var(--glow2) 0%, transparent 55%), var(--bg); }
+  .theme-toggle { position:fixed; top:18px; right:18px; width:40px; height:40px; border-radius:99px; border:1px solid var(--line);
+    background:var(--card); display:grid; place-items:center; cursor:pointer; color:var(--dim); }
+  .theme-toggle:hover { color:var(--text); }
+  .theme-toggle svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .theme-toggle .moon { display:none; }
+  html[data-theme="light"] .theme-toggle .moon { display:block; }
+  html[data-theme="light"] .theme-toggle .sun { display:none; }
+  main { max-width:640px; margin:0 auto; padding:56px 24px 64px; }
+  .kicker { font:700 10.5px/1 sans-serif; letter-spacing:.16em; text-transform:uppercase; color:var(--mint); }
+  h1 { font:700 30px/1.2 'Sora','Manrope',sans-serif; letter-spacing:-.02em; margin:10px 0 12px; }
+  p.lead { color:var(--dim); font-size:15.5px; }
+  p.lead b { color:var(--text); }
+  .lead-list { list-style:none; margin:14px 0 0; }
+  .lead-list li { position:relative; padding-left:22px; margin-top:9px; color:var(--dim); font-size:14.5px; }
+  .lead-list li::before { content:''; position:absolute; left:2px; top:8px; width:7px; height:7px; border-radius:99px; background:var(--mint); }
+  .lead-list b { color:var(--text); }
+  p.lead-close { color:var(--dim2); font-size:13px; margin-top:14px; }
+  .install { margin:22px 0 6px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 18px;
+    font:13px/1.9 var(--mono); color:var(--dim); overflow-x:auto; white-space:pre; }
+  .install b { color:var(--mint); font-weight:400; }
+  h2 { font:600 17px/1.3 'Sora','Manrope',sans-serif; margin:34px 0 4px; }
+  p.sub { color:var(--dim2); font-size:13px; margin-bottom:12px; }
+  .shot { margin:16px 0 6px; border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--card); }
+  .shot img { display:block; width:100%; height:auto; }
+  .cmd-wrap { overflow-x:auto; margin:14px 0 6px; border:1px solid var(--line); border-radius:14px; }
+  table.cmd { width:100%; border-collapse:collapse; font-size:13px; line-height:1.55; }
+  table.cmd th { text-align:left; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim2); padding:12px 16px 8px; border-bottom:1px solid var(--line); }
+  table.cmd td { padding:10px 16px; border-bottom:1px solid var(--line); color:var(--dim); vertical-align:top; }
+  table.cmd tr:last-child td { border-bottom:none; }
+  table.cmd td:first-child { white-space:nowrap; color:var(--text); }
+  table.cmd code { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12.5px; }
+  footer { margin-top:36px; border-top:1px solid var(--line); padding-top:18px; font-size:12.5px; color:var(--dim2); }
+  footer a { color:var(--mint); text-decoration:none; font-weight:700; }
+  footer a:hover { text-decoration:underline; }
+  .gk-mark { height:15px; vertical-align:-3px; margin-right:4px; }
+  .gk-light { display:none; }
+  html[data-theme="light"] .gk-light { display:inline; }
+  html[data-theme="light"] .gk-dark { display:none; }
+</style></head><body>
+<button class="theme-toggle" aria-label="Switch between light and dark mode" onclick="(function(){var r=document.documentElement,t=r.getAttribute('data-theme')==='light'?'dark':'light';r.setAttribute('data-theme',t);try{localStorage.setItem('roast-theme',t)}catch(e){}})()">
+  <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="7" y2="7"/><line x1="17" y1="17" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="7" y2="17"/><line x1="17" y1="7" x2="19.1" y2="4.9"/></svg>
+  <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+</button>
+<script>try{var t=localStorage.getItem('roast-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<main>
+<div class="kicker">guard-my-design-system</div>
+<h1>Your design system, guarded.</h1>
+<p class="lead"><b>Your design system dies one pull request at a time. This makes sure it doesn't.</b></p>
+<p class="lead">A free pull request guard <a href="https://www.npmjs.com/package/guard-my-design-system" style="color:var(--mint);text-decoration:none">on npm</a>, and a GitHub Action. It checks only the lines a change adds, says nothing about the past, and points each new sin at the on-system value the author probably meant:</p>
+<ul class="lead-list">
+<li><b>A hard-coded colour where a token exists</b>, with the nearest token named, so the fix takes thirty seconds and no meeting.</li>
+<li><b>A spacing value the codebase has never used</b>, with the nearest step named.</li>
+<li><b>A typeface the system does not declare</b>, an <b>!important</b>, an <b>arbitrary Tailwind value</b> that sidesteps the scale.</li>
+<li><b>One sticky comment per pull request</b>, updated in place as fixes land. It counts down instead of piling up, because nothing gets a tool uninstalled faster than spam.</li>
+<li><b>Strict mode as the one setting.</b> The check fails instead of commenting, for teams that want the door to actually lock.</li>
+<li><b>No config files, no rules to write, no tokens to register.</b> It learns your system by scanning your repo with the roast-my-design-system engine. Your codebase is the rulebook.</li>
+</ul>
+<p class="lead-close">Only added lines are checked; the existing codebase is never judged. Read only, no network, no telemetry. Every release is provenance signed on npm and passes the snapshot suite before it ships.</p>
+
+<div class="kicker" style="margin-top:26px">On every pull request</div>
+<div class="install"><b>name:</b> guard
+<b>on:</b> pull_request
+<b>permissions:</b> { contents: read, pull-requests: write }
+<b>jobs:</b>
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - uses: gregkozakiewicz/guard-my-design-system@v1</div>
+<p class="sub">Five minutes, once, in .github/workflows/guard.yml. After that you forget it exists, which is the whole point of a smoke alarm.</p>
+
+<div class="kicker" style="margin-top:26px">On your machine</div>
+<div class="install"><b>npx</b> guard-my-design-system@latest</div>
+<p class="sub">Judge your uncommitted work against main before anyone else sees it. One command in any repo, no install.</p>
+
+<h2>What a pull request sees</h2>
+<p class="sub">The guard's comment on real code: every finding with a file path and line, every stray next to the value the author probably meant.</p>
+<div class="shot"><img src="pr-comment.png" alt="The guard's comment on a pull request: six new issues, each with a file path and line, stray colours shown with swatches next to their nearest token, an off-scale spacing value next to its nearest step, a new typeface, an !important, and an arbitrary Tailwind value" loading="lazy"></div>
+
+<h2>Every command</h2>
+<p class="sub">The full documentation lives at <a href="https://github.com/gregkozakiewicz/guard-my-design-system" style="color:var(--mint);text-decoration:none">github.com/gregkozakiewicz/guard-my-design-system</a>.</p>
+<div class="cmd-wrap"><table class="cmd">
+<thead><tr><th>Command</th><th>What you get</th></tr></thead>
+<tbody>
+<tr><td><code>npx guard-my-design-system@latest</code></td><td>Your working tree's added lines judged against main, in the terminal</td></tr>
+<tr><td><code>npx guard-my-design-system@latest &lt;path&gt;</code></td><td>Judge a different repo than the current directory</td></tr>
+<tr><td><code>... --base &lt;ref&gt;</code></td><td>Diff against something other than main</td></tr>
+<tr><td><code>... --strict</code></td><td>Exit 1 on findings, so it slots into scripts and hooks</td></tr>
+<tr><td><code>... --markdown</code></td><td>The verdict as markdown, the same text the PR comment carries</td></tr>
+<tr><td><code>... --json</code></td><td>Findings as JSON on stdout, for scripts and pipelines</td></tr>
+<tr><td><code>... --exclude lab/</code></td><td>Leave folders out of the system scan. A .roastignore file at the repo root works too</td></tr>
+<tr><td><code>... --version</code></td><td>The version, without needing a repo</td></tr>
+</tbody>
+</table></div>
+
+<h2>The family</h2>
+<p class="sub"><a href="https://gregkozakiewicz.github.io/roast-my-design-system/" style="color:var(--mint);text-decoration:none">roast-my-design-system</a> diagnoses the whole codebase: a health score against a 34-repo benchmark, the receipts behind it, and the agent rules that keep AI-written UI on-system. Guard keeps new work from adding to the pile. Roast diagnoses it, guard protects it, and the guard's own comment ends by pointing at the inspector.</p>
+
+<p class="lead" style="margin-top:30px"><b>Your design system dies one pull request at a time. This makes sure it doesn't.</b></p>
+
+<footer><a href="https://github.com/gregkozakiewicz/guard-my-design-system">GitHub</a> · <a href="https://www.npmjs.com/package/guard-my-design-system">npm</a> · <a href="brand.html">brand</a> · MIT · built and designed by <a href="https://gregkozakiewicz.com"><img class="gk-mark gk-dark" src="https://raw.githubusercontent.com/gregkozakiewicz/roast-my-design-system/main/assets/gk-mark-dark.png?v=3.10.1" alt=""><img class="gk-mark gk-light" src="https://raw.githubusercontent.com/gregkozakiewicz/roast-my-design-system/main/assets/gk-mark.png?v=3.10.1" alt="">Greg Kozakiewicz</a></footer>
+</main></body></html>

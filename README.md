@@ -138,6 +138,6 @@ by Greg Kozakiewicz*.
 
 **guard-my-design-system**™ and the GK mark are trademarks of Greg Kozakiewicz.
 Forking is welcome, republishing under this name is not: see
-[brand and attribution](https://gregkozakiewicz.github.io/roast-my-design-system/brand.html).
+[brand and attribution](https://gregkozakiewicz.github.io/guard-my-design-system/brand.html).
 
 Built and designed by <a href="https://gregkozakiewicz.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/gregkozakiewicz/roast-my-design-system/main/assets/gk-mark-dark.png?v=3.10.1"><img src="https://raw.githubusercontent.com/gregkozakiewicz/roast-my-design-system/main/assets/gk-mark.png?v=3.10.1" height="15" alt="GK mark"></picture> Greg Kozakiewicz</a>.
