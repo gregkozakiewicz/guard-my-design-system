@@ -1,6 +1,6 @@
 {
   "name": "guard-my-design-system",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "No new mess. A pull request guard that judges only the lines a change adds against the design system the repo already has, and names the on-system value the author probably meant.",
   "type": "module",
   "bin": {

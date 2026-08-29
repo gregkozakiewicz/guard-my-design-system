@@ -4,6 +4,15 @@ The promise behind every number: a patch release never changes what gets
 flagged. If a version flags something new, it is a minor or major bump and
 this file says what, in one plain line.
 
+## 1.0.1 — 29 Aug 2026
+
+The first live pull request earned its keep. The Action's comment step never
+received the repository token (composite actions do not inherit it), so the
+verdict was printed into the logs instead of posted on the pull request. The
+token is now handed over explicitly. Same rules, same flags, nothing new is
+judged: a patch, as promised. The publish workflow also learned to ignore the
+floating `v1` tag, which moves on every release and must never start a publish.
+
 ## 1.0.0 — 29 Aug 2026
 
 The guard exists. Judges only the lines a change adds, against the design

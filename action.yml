@@ -21,6 +21,8 @@ runs:
         BASE_SHA: ${{ github.event.pull_request.base.sha }}
         STRICT: ${{ inputs.strict }}
         EXCLUDE: ${{ inputs.exclude }}
+        # composite actions do not inherit the token; hand it over explicitly
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         git fetch --no-tags --depth=1 origin "$BASE_SHA" 2>/dev/null || true
         ARGS=(--base "$BASE_SHA" --json)

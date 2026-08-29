@@ -6,9 +6,11 @@
 # to trust this exact workflow, and npm attaches provenance automatically.
 name: publish
 
+# Full semver tags only — the floating v1 tag (the Action reference teams
+# use) moves on every release and must never start a publish.
 on:
   push:
-    tags: ['v*']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
 
 permissions:
   contents: read
