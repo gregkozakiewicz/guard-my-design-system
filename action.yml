@@ -1,5 +1,5 @@
 name: guard-my-design-system
-description: "No new mess. Checks only the lines a pull request adds against the design system the repo already has."
+description: "Your design system dies one pull request at a time. This makes sure it doesn't. Checks only the lines a PR adds and names the nearest on-system value."
 branding:
   icon: shield
   color: gray-dark
