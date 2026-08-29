@@ -1,34 +1,50 @@
 # guard-my-design-system
 
-**No new mess.**
+[![npm](https://img.shields.io/npm/v/guard-my-design-system?color=2dd4bf&label=npm)](https://www.npmjs.com/package/guard-my-design-system) [![downloads](https://img.shields.io/npm/dm/guard-my-design-system?color=2dd4bf&label=downloads)](https://www.npmjs.com/package/guard-my-design-system) [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![no telemetry](https://img.shields.io/badge/no-telemetry-2dd4bf)](https://github.com/gregkozakiewicz/guard-my-design-system#what-makes-the-verdict-trustworthy) [![GitHub Action](https://img.shields.io/badge/GitHub_Action-v1-2dd4bf)](#on-a-pull-request)
 
-Design systems don't die in a redesign. They die one pull request at a time:
-a colour that's nearly the token, a spacing value that's off the scale, an
-`!important` that seemed harmless on a Friday.
+## Your design system dies one pull request at a time. This makes sure it doesn't.
 
-This is the smoke alarm at the door. It checks **only the lines a pull request
-adds**, says nothing about the past, and points each new sin at the on-system
-value the author probably meant. Old wiring is not its business; new sparks
-are.
+A pull request guard that checks **only the lines a change adds**, says nothing
+about the past, and points each new sin at the on-system value the author
+probably meant. Old wiring is not its business; new sparks are.
 
 It learns your system by scanning your repo with the
 [roast-my-design-system](https://github.com/gregkozakiewicz/roast-my-design-system)
-engine, then judges the diff against what it learned. No config files, no
-rules to write, no tokens to register. Your codebase is the rulebook.
+engine, then judges the diff against what it learned. No config files, no rules
+to write, no tokens to register. Your codebase is the rulebook.
+
+This is what a pull request sees, on real code, with the guard's own comment:
+
+![The guard's comment on a pull request: six new issues, each with a file path and line, the stray colours shown with swatches next to their nearest token, an off-scale spacing value next to its nearest step, a new typeface, an !important, and an arbitrary Tailwind value, ending with the note that only added lines are checked](https://raw.githubusercontent.com/gregkozakiewicz/guard-my-design-system/main/docs/pr-comment.png?v=1.0.2)
+
+One comment per pull request, updated in place as the author fixes things. Push
+a fix and the same comment counts down instead of piling up:
+
+![The same pull request after fixes were pushed: the guard's single comment has updated in place, now showing three remaining issues, with the fix commits visible in the timeline above it and all checks passing below](https://raw.githubusercontent.com/gregkozakiewicz/guard-my-design-system/main/docs/pr-comment-updated.png?v=1.0.2)
 
 ## What it catches
 
-- a hard-coded colour where a token exists, with the nearest token named
-- a spacing value the codebase has never used, with the nearest step named
-- a typeface the system doesn't declare
-- `!important`
-- arbitrary Tailwind values (`w-[137px]`, `mt-[37px]`)
+- **A hard-coded colour where a token exists**, with the nearest token named.
+- **A spacing value the codebase has never used**, with the nearest step named.
+- **A typeface the system does not declare.**
+- **`!important`**, the cascade admitting defeat.
+- **Arbitrary Tailwind values** (`w-[137px]`, `mt-[37px]`) that sidestep the scale.
 
 And what it deliberately ignores: everything that was already there. Even if
-the codebase carries years of mess, the guard only asks one question of a
-change: does it make things worse?
+the codebase carries years of mess, the guard asks one question of a change:
+does it make things worse?
+
+## Why this exists
+
+Nobody can win the argument "please go and clean up the codebase". Everyone can
+win "let us at least stop digging". The guard makes not-digging automatic, and
+it matters more now than ever: AI agents write a growing share of UI code, and
+they drift off-system faster than review can catch. Rules files ask nicely; the
+guard checks.
 
 ## On a pull request
+
+Five minutes, once:
 
 ```yaml
 # .github/workflows/guard.yml
@@ -47,12 +63,7 @@ jobs:
       - uses: gregkozakiewicz/guard-my-design-system@v1
 ```
 
-Every pull request gets one comment, updated in place, like:
-
-> **🛡 guard-my-design-system: 2 new issues in this pull request**
->
-> - `Card.tsx:24` — new colour `#4a7be8`. Nearest token: `#3b6fe0`.
-> - `Card.tsx:31` — new spacing value `13px`. Nearest existing value: `12px`.
+After that you forget it exists, which is the whole point of a smoke alarm.
 
 Prefer a failed check over a comment? Strict mode is the one setting:
 
@@ -62,25 +73,71 @@ Prefer a failed check over a comment? Strict mode is the one setting:
           strict: true
 ```
 
+`exclude` keeps folders out of the system scan, same syntax as the CLI below.
+
 ## On your machine
 
 Judge your uncommitted work before anyone else sees it:
 
 ```bash
-npx guard-my-design-system
+npx guard-my-design-system@latest
 ```
 
-Flags: `--base <ref>` to diff against something other than main,
-`--strict` to exit 1 on findings, `--json` for machines,
-`--exclude <paths>` to leave folders out of the system scan.
+| Command | What you get |
+|---|---|
+| <code>npx&nbsp;guard-my-design-system@latest</code> | Your working tree's added lines judged against main, in the terminal |
+| <code>npx&nbsp;guard-my-design-system@latest&nbsp;&lt;path&gt;</code> | Judge a different repo than the current directory |
+| <code>...&nbsp;--base&nbsp;&lt;ref&gt;</code> | Diff against something other than main |
+| `... --strict` | Exit 1 on findings, so it slots into scripts and hooks |
+| `... --markdown` | The verdict as markdown, the same text the PR comment carries |
+| `... --json` | Findings as JSON on stdout, for scripts and pipelines |
+| <code>...&nbsp;--exclude&nbsp;lab/</code> | Leave folders out of the system scan (comma-separate for more). A `.roastignore` file at the repo root works too |
+
+Requires Node 18+ and git.
+
+## What makes the verdict trustworthy
+
+- **Only added lines are checked.** The existing codebase is never judged,
+  never counted, never mentioned. Nobody rips out a smoke alarm because it
+  criticised their old wiring.
+- **Deterministic, not AI sampling.** The same engine that powers
+  roast-my-design-system reads the diff and returns the same verdict every
+  run. No model, no sampling, no drift.
+- **Read-only, no network, no telemetry.** The scan and the diff both happen
+  locally in your CI runner or terminal. Nothing about your code leaves the
+  machine it runs on.
+- **Honest exemptions, inherited from roast.** Email and print styling must be
+  inline, so it is never flagged. Artwork files carry hex that is drawing, not
+  styling. Defining a new token is extending the system, not a sin.
+- **Findings are blunt, advice starts from intent.** Every flag names the
+  on-system value the author probably meant, so the fix takes thirty seconds
+  and no meeting.
 
 ## The family
 
 [roast-my-design-system](https://github.com/gregkozakiewicz/roast-my-design-system)
-diagnoses the whole codebase and scores it against a 34-repo benchmark.
-guard keeps new work from adding to the pile. Roast diagnoses it, guard
-protects it.
+diagnoses the whole codebase: a health score against a 34-repo benchmark, the
+receipts behind it, and the agent rules that keep AI-written UI on-system.
+guard keeps new work from adding to the pile.
 
-## Licence
+Roast diagnoses it. Guard protects it.
 
-MIT © [Greg Kozakiewicz](https://gregkozakiewicz.com)
+**Your design system dies one pull request at a time. This makes sure it doesn't.**
+
+<a href="https://github.com/gregkozakiewicz/guard-my-design-system"><img src="https://img.shields.io/badge/If%20it%20caught%20something%20before%20review%20did%2C%20a%20star%20helps%20other%20people%20find%20it-a855f7?style=for-the-badge&logo=github&logoColor=white" alt="If it caught something before review did, a star helps other people find it"></a>
+
+## License
+
+MIT. The code is yours to fork, modify and redistribute; the copyright notice
+travels with it.
+
+If you build a report, summary or audit of your own from this tool's findings,
+keep one line in it: *Built with
+[guard-my-design-system](https://github.com/gregkozakiewicz/guard-my-design-system)
+by Greg Kozakiewicz*.
+
+**guard-my-design-system**™ and the GK mark are trademarks of Greg Kozakiewicz.
+Forking is welcome, republishing under this name is not: see
+[brand and attribution](https://gregkozakiewicz.github.io/roast-my-design-system/brand.html).
+
+Built and designed by <a href="https://gregkozakiewicz.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/gregkozakiewicz/roast-my-design-system/main/assets/gk-mark-dark.png?v=3.10.1"><img src="https://raw.githubusercontent.com/gregkozakiewicz/roast-my-design-system/main/assets/gk-mark.png?v=3.10.1" height="15" alt="GK mark"></picture> Greg Kozakiewicz</a>.

@@ -1,7 +1,7 @@
 {
   "name": "guard-my-design-system",
-  "version": "1.0.1",
-  "description": "No new mess. A pull request guard that judges only the lines a change adds against the design system the repo already has, and names the on-system value the author probably meant.",
+  "version": "1.0.2",
+  "description": "Your design system dies one pull request at a time. This makes sure it doesn't. A guard that judges only the lines a change adds, against the system the repo already has, and names the on-system value the author probably meant.",
   "type": "module",
   "bin": {
     "guard-my-design-system": "index.mjs"
@@ -17,11 +17,19 @@
     "design-system",
     "design-tokens",
     "lint",
+    "linter",
     "ci",
     "pull-request",
     "code-review",
+    "github-action",
+    "design-drift",
+    "design-ops",
+    "code-quality",
+    "ai-agents",
     "tailwind",
-    "css"
+    "css",
+    "style-guide",
+    "developer-tools"
   ],
   "author": "Greg Kozakiewicz (https://gregkozakiewicz.com)",
   "license": "MIT",
