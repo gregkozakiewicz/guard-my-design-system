@@ -8,6 +8,16 @@ A pull request guard that checks **only the lines a change adds**, says nothing
 about the past, and points each new sin at the on-system value the author
 probably meant. Old wiring is not its business; new sparks are.
 
+It speaks in nearests, not scoldings:
+
+> `Card.tsx:24` — new colour `#4a7be8`. Nearest token: `#3b6fe0`.
+>
+> `site.css:31` — new spacing value `13px`. Nearest existing value: `12px`.
+>
+> `site.css:33` — new typeface `Comic Sans MS`. First typeface declared in this codebase.
+>
+> `site.css:35` — `!important`. The cascade admitting defeat; raise specificity or fix the source order.
+
 It learns your system by scanning your repo with the
 [roast-my-design-system](https://github.com/gregkozakiewicz/roast-my-design-system)
 engine, then judges the diff against what it learned. No config files, no rules
