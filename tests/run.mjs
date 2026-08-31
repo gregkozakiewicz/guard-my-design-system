@@ -30,7 +30,8 @@ function makeRepo() {
   mkdirSync(join(dir, 'components'), { recursive: true });
   git(dir, 'init', '-qb', 'main');
   writeFileSync(join(dir, 'styles/site.css'),
-    '--blue-500: #3b6fe0;\n--grey-100: #f5f5f5;\n.card { padding: 12px; color: var(--blue-500); }\n');
+    '--blue-500: #3b6fe0;\n--grey-100: #f5f5f5;\n' +
+    '.card { padding: 12px; color: var(--blue-500); border-radius: 6px; font-size: 14px; box-shadow: 0 1px 2px #1a1a1a; }\n');
   writeFileSync(join(dir, 'components/Button.tsx'),
     'export const Button = () => <button className="p-4">ok</button>;\n');
   git(dir, 'add', '-A');
@@ -131,6 +132,41 @@ console.log('markdown:');
   ok(md.includes('guard-my-design-system: 1 new issue'), 'markdown header counts issues');
   ok(md.includes('npx roast-my-design-system'), 'markdown carries the roast footer');
   ok(md.includes('never judged'), 'markdown states the diff-only promise');
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ---- advice names the token, not just the hex ----
+console.log('token names:');
+{
+  const dir = makeRepo();
+  appendFileSync(join(dir, 'styles/site.css'), '.x { color: #3564cc; }\n');
+  const r = run(dir);
+  ok(r.findings[0]?.advice.includes('var(--blue-500)'), `nearest token is named (${r.findings[0]?.advice})`);
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ---- radius, font-size and shadow are judged too ----
+console.log('new kinds:');
+{
+  const dir = makeRepo();
+  appendFileSync(join(dir, 'styles/site.css'),
+    '.y { border-radius: 5px; font-size: 13.5px; box-shadow: 0 4px 12px; }\n');
+  const r = run(dir);
+  const kinds = r.findings.map((f) => f.kind).sort().join(',');
+  ok(kinds === 'fontsize,radius,shadow', `all three kinds flagged (${kinds})`);
+  const radius = r.findings.find((f) => f.kind === 'radius');
+  ok(radius?.advice.includes('6px'), 'radius names the nearest existing value');
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ---- disciplined values of the new kinds stay silent ----
+console.log('new kinds, clean:');
+{
+  const dir = makeRepo();
+  appendFileSync(join(dir, 'styles/site.css'),
+    '.z { border-radius: var(--radius); font-size: 14px; box-shadow: none; }\n');
+  const r = run(dir);
+  ok(r.findings.length === 0, 'var(), known value and none are not sins');
   rmSync(dir, { recursive: true, force: true });
 }
 

@@ -63,8 +63,8 @@
 <p class="lead"><b>Your design system dies one pull request at a time. This makes sure it doesn't.</b></p>
 <p class="lead">A free pull request guard <a href="https://www.npmjs.com/package/guard-my-design-system" style="color:var(--mint);text-decoration:none">on npm</a>, and a GitHub Action. It checks only the lines a change adds, says nothing about the past, and points each new sin at the on-system value the author probably meant:</p>
 <ul class="lead-list">
-<li><b>A hard-coded colour where a token exists</b>, with the nearest token named, so the fix takes thirty seconds and no meeting.</li>
-<li><b>A spacing value the codebase has never used</b>, with the nearest step named.</li>
+<li><b>A hard-coded colour where a token exists</b>, with the nearest token named by its variable: use var(--blue-500), not a hex to go hunting for.</li>
+<li><b>A spacing value, border radius, font size or shadow the codebase has never used</b>, with the nearest existing value named.</li>
 <li><b>A typeface the system does not declare</b>, an <b>!important</b>, an <b>arbitrary Tailwind value</b> that sidesteps the scale.</li>
 <li><b>One sticky comment per pull request</b>, updated in place as fixes land. It counts down instead of piling up, because nothing gets a tool uninstalled faster than spam.</li>
 <li><b>Strict mode as the one setting.</b> The check fails instead of commenting, for teams that want the door to actually lock.</li>

@@ -7,6 +7,9 @@
 const KIND_LABEL = {
   color: 'new colour',
   spacing: 'new spacing value',
+  radius: 'new border radius',
+  fontsize: 'new font size',
+  shadow: 'new shadow',
   arbitrary: 'arbitrary Tailwind value',
   important: '!important',
   font: 'new typeface',

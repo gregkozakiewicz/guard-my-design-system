@@ -4,6 +4,25 @@ The promise behind every number: a patch release never changes what gets
 flagged. If a version flags something new, it is a minor or major bump and
 this file says what, in one plain line.
 
+## 1.2.0 — 31 Aug 2026
+
+The advice names names, and three new kinds are judged. Minor bump: things
+are flagged that 1.1 let through.
+
+- **Advice speaks in variables.** Where the system defines a value as a custom
+  property, findings now say so: "nearest token: `var(--blue-500)`, #3b6fe0"
+  instead of leaving the reader to hunt the hex. Works for colours and for
+  spacing steps alike.
+- **Now flagged, wasn't before:** border radii, font sizes and shadows that
+  the system does not declare, in style files, each with the nearest existing
+  value named. Same self-vouching discount and disciplined-value handling
+  (`var(…)`, `inherit`, `none`, known values) as everything else.
+- Needs roast-my-design-system 5.5.3, which widened the engine doorway to
+  carry the radii, font sizes, shadows and token names the harvest already
+  computed.
+
+Suite grows to 25 checks.
+
 ## 1.1.1 — 29 Aug 2026
 
 Transparency release. Nothing new is flagged; two things can only flag less.

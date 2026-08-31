@@ -10,9 +10,11 @@ probably meant. Old wiring is not its business; new sparks are.
 
 It speaks in nearests, not scoldings:
 
-> `Card.tsx:24` — new colour `#4a7be8`. Nearest token: `#3b6fe0`.
+> `Card.tsx:24` — new colour `#4a7be8`. Nearest token: `var(--blue-500)`, `#3b6fe0`.
 >
 > `site.css:31` — new spacing value `13px`. Nearest existing value: `12px`.
+>
+> `site.css:32` — new border radius `5px`. Nearest existing value: `6px`.
 >
 > `site.css:33` — new typeface `Comic Sans MS`. First typeface declared in this codebase.
 >
@@ -34,8 +36,11 @@ a fix and the same comment counts down instead of piling up:
 
 ## What it catches
 
-- **A hard-coded colour where a token exists**, with the nearest token named.
+- **A hard-coded colour where a token exists**, with the nearest token named by
+  its variable: `var(--blue-500)`, not a hex to go hunting for.
 - **A spacing value the codebase has never used**, with the nearest step named.
+- **A border radius, font size or shadow** the system does not declare, with
+  the nearest existing value named.
 - **A typeface the system does not declare.**
 - **`!important`**, the cascade admitting defeat.
 - **Arbitrary Tailwind values** (`w-[137px]`, `mt-[37px]`) that sidestep the scale.
