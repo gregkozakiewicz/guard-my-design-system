@@ -1,5 +1,5 @@
 name: guard-my-design-system
-description: "Your design system dies one pull request at a time. This makes sure it doesn't. Judges only the lines a PR adds."
+description: "Your design system dies one pull request at a time. This makes sure it doesn’t. Judges only the lines a PR adds."
 branding:
   icon: shield
   color: gray-dark

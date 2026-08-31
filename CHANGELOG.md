@@ -4,6 +4,12 @@ The promise behind every number: a patch release never changes what gets
 flagged. If a version flags something new, it is a minor or major bump and
 this file says what, in one plain line.
 
+## 1.3.1 — 31 Aug 2026
+
+One character. The Marketplace sidebar strips a straight apostrophe from the
+action description, so "doesn't" read "doesn t"; a typographic apostrophe
+survives. Nothing else changes.
+
 ## 1.3.0 — 31 Aug 2026
 
 The release for the legitimate exception, and for teams not on GitHub.
