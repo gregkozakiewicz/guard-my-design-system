@@ -69,6 +69,7 @@
 <li><b>One sticky comment per pull request</b>, updated in place as fixes land. It counts down instead of piling up, because nothing gets a tool uninstalled faster than spam.</li>
 <li><b>Strict mode as the one setting.</b> The check fails instead of commenting, for teams that want the door to actually lock.</li>
 <li><b>No config files, no rules to write, no tokens to register.</b> It learns your system by scanning your repo with the roast-my-design-system engine. Your codebase is the rulebook.</li>
+<li><b>An escape hatch for the legitimate exception.</b> A guard-ignore-next-line comment silences exactly one line, visibly, with the reason sitting right there in code review.</li>
 </ul>
 <p class="lead-close">Only added lines are checked; the existing codebase is never judged. Read only, no network, no telemetry. Every release is provenance signed on npm and passes the snapshot suite before it ships.</p>
 
@@ -87,7 +88,7 @@
 
 <div class="kicker" style="margin-top:26px">On your machine</div>
 <div class="install"><b>npx</b> guard-my-design-system@latest</div>
-<p class="sub">Judge your uncommitted work against main before anyone else sees it. One command in any repo, no install.</p>
+<p class="sub">Judge your uncommitted work against main before anyone else sees it. One command in any repo, no install. Not on GitHub? The same CLI slots into GitLab and Bitbucket pipelines — copy-paste recipes are in the <a href="https://github.com/gregkozakiewicz/guard-my-design-system#not-on-github" style="color:var(--mint);text-decoration:none">README</a>.</p>
 
 <h2>What a pull request sees</h2>
 <p class="sub">The guard's comment on real code: every finding with a file path and line, every stray next to the value the author probably meant.</p>

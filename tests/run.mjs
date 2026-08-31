@@ -211,6 +211,33 @@ console.log('exclusions:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+// ---- the escape hatch ----
+console.log('escape hatch:');
+{
+  const dir = makeRepo();
+  appendFileSync(join(dir, 'styles/site.css'),
+    '/* guard-ignore-next-line — partner brand colour */\n.p { color: #e4002b; }\n');
+  const r = run(dir);
+  ok(r.findings.length === 0, 'ignored line stays silent');
+  appendFileSync(join(dir, 'styles/site.css'), '.q { color: #e4002b; }\n');
+  const r2 = run(dir);
+  ok(r2.findings.length === 1 && r2.findings[0].line > 0, 'the exception covers one line, not the value');
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ---- an old exception still protects its line ----
+console.log('escape hatch, pre-existing:');
+{
+  const dir = makeRepo();
+  appendFileSync(join(dir, 'styles/site.css'), '/* guard-ignore-next-line — legacy embed */\n');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'comment only');
+  appendFileSync(join(dir, 'styles/site.css'), '.r { color: #cc0011 !important; }\n');
+  const r = run(dir);
+  ok(r.findings.length === 0, 'comment committed earlier still silences the new line below it');
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ---- --version ----
 console.log('version flag:');
 {

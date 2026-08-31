@@ -4,6 +4,24 @@ The promise behind every number: a patch release never changes what gets
 flagged. If a version flags something new, it is a minor or major bump and
 this file says what, in one plain line.
 
+## 1.3.0 — 31 Aug 2026
+
+The release for the legitimate exception, and for teams not on GitHub.
+
+- **The escape hatch.** A `guard-ignore-next-line` comment silences every
+  finding on the line below it — one line, visibly, with the reason sitting in
+  code review. Checked against the file as it stands, so an exception granted
+  last month still protects its line today. No config file, no rule IDs.
+- **GitLab and Bitbucket recipes.** The README's new "Not on GitHub?" section
+  carries copy-paste pipeline snippets for both; `--strict` fails the step and
+  the verdict prints in the log.
+- The repo grows CONTRIBUTING.md and issue templates — including a dedicated
+  **false positive** template, because a wrong flag on legitimate code is the
+  most serious bug class this tool has.
+
+Nothing new is flagged; the escape hatch can only flag less. Suite grows to
+28 checks.
+
 ## 1.2.0 — 31 Aug 2026
 
 The advice names names, and three new kinds are judged. Minor bump: things

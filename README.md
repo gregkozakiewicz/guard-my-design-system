@@ -49,6 +49,22 @@ And what it deliberately ignores: everything that was already there. Even if
 the codebase carries years of mess, the guard asks one question of a change:
 does it make things worse?
 
+## When the guard is wrong
+
+Sometimes an off-system value is the right call: a partner's brand colour, a
+gradient that needs its own stops. Say so on the line above, and the guard
+lets that one line pass:
+
+```css
+/* guard-ignore-next-line — partner brand colour, agreed with design */
+background: #e4002b;
+```
+
+Works in any file the guard reads (`//` in components, `/* */` in styles).
+The exception is visible in code review by nature, silences exactly one line,
+and keeps working on later pull requests that touch the same line. No config
+file, no rule IDs — a sentence a reviewer can read is the whole mechanism.
+
 ## Why this exists
 
 Nobody can win the argument "please go and clean up the codebase". Everyone can
@@ -113,6 +129,38 @@ npx guard-my-design-system@latest
 
 Requires Node 18+ and git.
 
+## Not on GitHub?
+
+The CLI works anywhere git works; only the comment-posting Action is
+GitHub-specific. On GitLab, the merge request pipeline gets the failing check
+with two lines in `.gitlab-ci.yml`:
+
+```yaml
+guard:
+  image: node:22
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - npx guard-my-design-system@latest --strict --base origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+```
+
+Bitbucket Pipelines, same idea in `bitbucket-pipelines.yml`:
+
+```yaml
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          image: node:22
+          script:
+            - git fetch origin $BITBUCKET_PR_DESTINATION_BRANCH
+            - npx guard-my-design-system@latest --strict --base origin/$BITBUCKET_PR_DESTINATION_BRANCH
+```
+
+The verdict prints in the pipeline log and `--strict` fails the step; the
+sticky PR comment stays a GitHub luxury for now.
+
 ## What makes the verdict trustworthy
 
 - **Only added lines are checked.** The existing codebase is never judged,
@@ -149,9 +197,9 @@ in a pull request:
   workflow a read-only token). The guard still runs; the verdict lands in the
   workflow log instead, with a line saying why. The same happens if the
   workflow is missing `pull-requests: write`.
-- **Not on GitHub?** The CLI works anywhere git works: GitLab and Bitbucket CI
-  can run `npx guard-my-design-system --strict --base <target branch sha>` and
-  get the failing check. Only the comment-posting Action is GitHub-specific.
+- **Not on GitHub?** Covered — copy-paste GitLab and Bitbucket recipes live in
+  [Not on GitHub?](#not-on-github) above. Only the comment-posting Action is
+  GitHub-specific.
 
 ## The family
 

@@ -71,7 +71,21 @@ ignorePrefixes = ignorePrefixes.map((p) => p.replace(/^\.?\//, '').replace(/\/?$
 const judged = added.filter(({ file }) => !ignorePrefixes.some((p) => (file + '/').startsWith(p)));
 
 const system = learnSystem(cwd, { exclude });
-const findings = judge(judged, system);
+let findings = judge(judged, system);
+
+// The escape hatch: a `guard-ignore-next-line` comment silences every finding
+// on the line below it. Checked against the file as it stands (not just the
+// diff), so an exception granted last month still protects its line today.
+// Visible in code review by nature — that is the whole safety of it.
+const fileCache = new Map();
+const lineAbove = (file, line) => {
+  if (!fileCache.has(file)) {
+    try { fileCache.set(file, readFileSync(resolve(cwd, file), 'utf8').split('\n')); }
+    catch { fileCache.set(file, []); }
+  }
+  return fileCache.get(file)[line - 2] ?? '';
+};
+findings = findings.filter((f) => !lineAbove(f.file, f.line).includes('guard-ignore-next-line'));
 
 if (flag('json')) {
   console.log(JSON.stringify({ base, addedLines: added.length, findings }, null, 2));
