@@ -85,6 +85,9 @@ Prefer a failed check over a comment? Strict mode is the one setting:
 
 `exclude` keeps folders out of the system scan, same syntax as the CLI below.
 
+Security-conscious teams can pin to an exact commit instead of a version tag:
+`uses: gregkozakiewicz/guard-my-design-system@<commit-sha>`.
+
 ## On your machine
 
 Judge your uncommitted work before anyone else sees it:
