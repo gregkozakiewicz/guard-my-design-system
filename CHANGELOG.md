@@ -4,6 +4,22 @@ The promise behind every number: a patch release never changes what gets
 flagged. If a version flags something new, it is a minor or major bump and
 this file says what, in one plain line.
 
+## 1.3.2 — 2 Sep 2026
+
+The engine under the guard moves to roast 5.7.2, and the learning gets truer.
+Nothing new is flagged; several wrong flags are gone.
+
+- **Web-component repos are finally legible.** On Lit and Stencil codebases
+  (Shoelace keeps its entire styling in `` css`…` `` templates) the guard now
+  learns the real token layer, spacing scale and typefaces, so its "known" and
+  "nearest" answers stop running on an almost-empty map.
+- **Sass repos judge cleaner:** `$token` references are no longer typefaces,
+  the Sass `color(base)` helper is no longer a colour, fully transparent
+  values no longer pad the palette — inherited straight from the engine.
+- Known gap, stated honestly: inside `` css`…` `` templates the per-line
+  judge catches colours but not yet spacing and friends; the whole-repo
+  learning sees everything.
+
 ## 1.3.1 — 31 Aug 2026
 
 One character. The Marketplace sidebar strips a straight apostrophe from the
