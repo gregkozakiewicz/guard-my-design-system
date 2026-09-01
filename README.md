@@ -22,8 +22,10 @@ It speaks in nearests, not scoldings:
 
 It learns your system by scanning your repo with the
 [roast-my-design-system](https://github.com/gregkozakiewicz/roast-my-design-system)
-engine, then judges the diff against what it learned. No config files, no rules
-to write, no tokens to register. Your codebase is the rulebook.
+engine, then judges the diff against what it learned. CSS, SCSS, styled
+components, and the web-component world too: Lit's `` css`…` `` templates and
+Stencil styling are read like any stylesheet. No config files, no rules to
+write, no tokens to register. Your codebase is the rulebook.
 
 This is what a pull request sees, on real code, with the guard's own comment:
 
@@ -200,6 +202,10 @@ in a pull request:
 - **Not on GitHub?** Covered — copy-paste GitLab and Bitbucket recipes live in
   [Not on GitHub?](#not-on-github) above. Only the comment-posting Action is
   GitHub-specific.
+- **Inside `` css`…` `` templates, colours are caught line by line; spacing,
+  radii and friends are not yet.** The whole-repo learning reads those
+  templates in full, so the system is learned correctly either way; the
+  line-level gap closes with a future engine release.
 
 ## The family
 

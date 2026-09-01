@@ -4,6 +4,12 @@ The promise behind every number: a patch release never changes what gets
 flagged. If a version flags something new, it is a minor or major bump and
 this file says what, in one plain line.
 
+## 1.3.3 — 2 Sep 2026
+
+Docs only: the README and landing page catch up with 1.3.2 — the guard now
+says it reads Lit and Stencil styling, and Honest limits carries the
+css-template line-level gap. Published so npm's copy matches.
+
 ## 1.3.2 — 2 Sep 2026
 
 The engine under the guard moves to roast 5.7.2, and the learning gets truer.

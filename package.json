@@ -1,6 +1,6 @@
 {
   "name": "guard-my-design-system",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Your design system dies one pull request at a time. This makes sure it doesn't. A guard that judges only the lines a change adds, against the system the repo already has, and names the on-system value the author probably meant.",
   "type": "module",
   "bin": {
