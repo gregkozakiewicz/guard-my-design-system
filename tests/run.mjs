@@ -223,6 +223,68 @@ console.log('duplicate components:');
   }
 }
 
+// ---- a name that repeats by design ----
+// A TanStack or Remix route file exports Route; every page has one. The
+// report never called that a duplicate, the guard did: a pull request adding
+// a page was told to import another page's route (2026-09-29).
+console.log('names that repeat by design:');
+{
+  const route = (path, name) => `import { createFileRoute } from '@tanstack/react-router';\nexport const Route = createFileRoute('${path}')({ component: ${name} });\nfunction ${name}() { return <main className="p-4">${name}</main>; }\n`;
+  const dir = makeRepo();
+  mkdirSync(join(dir, 'src/routes/_app/tasks'), { recursive: true });
+  mkdirSync(join(dir, 'src/routes/_app/users'), { recursive: true });
+  writeFileSync(join(dir, 'src/routes/__root.tsx'), route('/', 'Root'));
+  writeFileSync(join(dir, 'src/routes/_app/tasks/index.tsx'), route('/tasks', 'Tasks'));
+  writeFileSync(join(dir, 'src/routes/_app/users/index.tsx'), route('/users', 'Users'));
+  writeFileSync(join(dir, 'components/Button.stories.tsx'),
+    'export const Primary = () => <button className="p-4">demo</button>;\n');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'routes');
+
+  mkdirSync(join(dir, 'src/routes/_app/billing'), { recursive: true });
+  writeFileSync(join(dir, 'src/routes/_app/billing/index.tsx'), route('/billing', 'Billing'));
+  writeFileSync(join(dir, 'components/Card.stories.tsx'),
+    'export const Primary = () => <div className="p-4">demo</div>;\n');
+  const r = run(dir);
+  ok(r.findings.filter((f) => f.kind === 'component').length === 0,
+    `a new route file and a new story are not second copies (got ${r.findings.filter((f) => f.kind === 'component').map((f) => f.value).join(', ') || 'none'})`);
+
+  // a wrapper built on the component it shares a name with, and a stub with
+  // no markup in it: the report counts neither
+  mkdirSync(join(dir, 'features'), { recursive: true });
+  writeFileSync(join(dir, 'features/Button.tsx'),
+    "import { Button as Base } from '../components/Button';\nexport const Button = (p) => <Base tone=\"quiet\" {...p} />;\n");
+  mkdirSync(join(dir, 'templates'), { recursive: true });
+  writeFileSync(join(dir, 'templates/Button.tsx'), 'export function Button() {\n  return null;\n}\n');
+  const rw = run(dir);
+  ok(rw.findings.filter((f) => f.kind === 'component').length === 0,
+    `a wrapper and a stub are not second copies (got ${rw.findings.filter((f) => f.kind === 'component').map((f) => `${f.value} in ${f.file}`).join(', ') || 'none'})`);
+  rmSync(join(dir, 'features'), { recursive: true, force: true });
+  rmSync(join(dir, 'templates'), { recursive: true, force: true });
+
+  // a drawing is excused its colours, not a second copy of itself
+  mkdirSync(join(dir, 'brand'), { recursive: true });
+  mkdirSync(join(dir, 'marketing'), { recursive: true });
+  const logo = (d) => `export function Logo() { return <svg viewBox="0 0 32 32"><path fill="#ff5a1f" d="${d}" /></svg>; }\n`;
+  writeFileSync(join(dir, 'brand/Logo.tsx'), logo('M4 4h24v24H4z'));
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'logo');
+  writeFileSync(join(dir, 'marketing/Logo.tsx'), logo('M6 6h20v20H6z'));
+  const rl = run(dir);
+  ok(rl.findings.length === 1 && rl.findings[0].kind === 'component' && rl.findings[0].value === 'Logo',
+    `a second Logo is caught and its colour is not judged (got ${rl.findings.map((f) => `${f.kind} ${f.value}`).join(', ') || 'none'})`);
+  rmSync(join(dir, 'marketing'), { recursive: true, force: true });
+
+  // and a real second Button in the same change is still caught
+  writeFileSync(join(dir, 'components/ButtonV2.tsx'),
+    'export const Button = () => <button className="p-4">also ok</button>;\n');
+  const r2 = run(dir);
+  const dupes = r2.findings.filter((f) => f.kind === 'component');
+  ok(dupes.length === 1 && dupes[0].value === 'Button', `a second <Button> beside them is still caught (got ${dupes.map((f) => f.value).join(', ') || 'none'})`);
+
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ---- disciplined values of the new kinds stay silent ----
 console.log('new kinds, clean:');
 {

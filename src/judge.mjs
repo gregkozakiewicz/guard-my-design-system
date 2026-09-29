@@ -10,7 +10,7 @@
 import {
   extractStyling, normalizeHex, nearestColor, nearestLength,
   isCodeFile, isStyleFile, typefaceOf, GENERIC_FONTS,
-  definedComponents, exemptReason,
+  definedComponents, componentNamesIn, duplicateCopies, isPageFile, exemptReason,
   EXTRA_KINDS, extraValue, fontDeclarations,
   WIDGET_CSS_RE, isLibraryClass, PALETTE_CLASS_RE, blankComments, kitPaintFindings,
   tokenTwinFindings, avoidedImportFindings, isChartFile, chartFindings, handmadeButtonFindings,
@@ -181,12 +181,13 @@ export function judge(added, system, { readFile, readBase } = {}) {
   const knownFaces = new Set(
     [...faceCounts].filter(([face, n]) => n > (addedFaces.get(face) ?? 0)).map(([face]) => face)
   );
-  // Components the repo already defines, by name. Pages are routes rather than
-  // reusable parts, so two of a name there is not a second Button.
+  // Components the repo already defines, by name: the whole ledger. What
+  // counts as a second copy is the engine's call (duplicateCopies), so the
+  // guard and the report give one answer. A page, a framework's Route, a
+  // story, a wrapper and two icon libraries colliding are not second copies.
   const componentsByName = new Map();
   if (definedComponents && Array.isArray(system.components)) {
     for (const c of system.components) {
-      if (c.isPage) continue;
       const list = componentsByName.get(c.name) ?? [];
       list.push(c);
       componentsByName.set(c.name, list);
@@ -236,10 +237,54 @@ export function judge(added, system, { readFile, readBase } = {}) {
     return isChartFile(file, w ?? '');
   };
 
+  // A hand-rolled second <Button> is the most expensive thing a pull request
+  // can add, and it was the one thing the guard could not see. The scan
+  // includes this change, so the new copy is in the ledger too: what counts
+  // is whether the name lives anywhere ELSE, and the engine answers that the
+  // way the report does (duplicateCopies).
+  const definedByFile = new Map();
+  const definedIn = (file) => {
+    if (!definedByFile.has(file)) definedByFile.set(file, new Set(componentNamesIn(wholeText(file) ?? '', file)));
+    return definedByFile.get(file);
+  };
+  const secondCopies = (file, line, text) => {
+    const out = [];
+    if (!componentsByName.size) return out;
+    // what the whole file defines for the report, kept to what this line declares
+    const onLine = new Set(definedComponents(text));
+    const names = wholeText(file) === null
+      ? [...onLine]
+      : [...definedIn(file)].filter((n) => onLine.has(n) || new RegExp(`\\bclass\\s+${n}\\b`).test(text));
+    for (const name of names) {
+      const variantOf = (f) => variants.find((v) => underAny(f, [v])) ?? null;
+      const counted = system.duplicates?.get?.(name)?.copies.map((c) => c.file) ?? null;
+      const elsewhere = duplicateCopies({ name, file, isPage: isPageFile(file) }, componentsByName.get(name), counted, samePath)
+        // a registry keeps the same component in sibling variants, and a
+        // block installs alone: neither is a second Button
+        .filter((c) => !(variantOf(file) && variantOf(c.file) && variantOf(c.file) !== variantOf(file)))
+        .filter((c) => !(underAny(file, blockDirs) && underAny(c.file, blockDirs)));
+      if (!elsewhere.length) continue;
+      const best = [...elsewhere].sort((a, b) => b.usageCount - a.usageCount)[0];
+      out.push({
+        file, line, kind: 'component', value: name,
+        // never open the advice with the path: the report capitalises the
+        // first letter, and a capitalised path is the wrong path
+        advice: elsewhere.length > 1
+          ? `${elsewhere.length} other files define it too; import ${best.file}, the one the codebase leans on`
+          : `import ${best.file} rather than starting a second one${best.usageCount ? `, which ${best.usageCount} place${best.usageCount === 1 ? '' : 's'} already do` : ''}`,
+      });
+    }
+    return out;
+  };
+
   for (const { file, line, text } of added) {
-    if (exempt(file) || outOfScope(file)) continue;
+    if (outOfScope(file)) continue;
     const css = isStyleFile(file);
     if (!css && !isCodeFile(file)) continue;
+    // The exemptions are about styling: what an email, a drawing or a crash
+    // page cannot take from the system. A second copy of a component is a
+    // second copy in any medium, and the report counts it.
+    if (exempt(file)) { if (!css) findings.push(...secondCopies(file, line, text)); continue; }
 
     const seen = extractStyling(text, { css });
 
@@ -325,30 +370,7 @@ export function judge(added, system, { readFile, readBase } = {}) {
       });
     }
 
-    // A hand-rolled second <Button> is the most expensive thing a pull request
-    // can add, and it was the one thing the guard could not see. The scan
-    // includes this change, so the new copy is in the ledger too: what counts
-    // is whether the name lives anywhere ELSE.
-    if (!css && componentsByName.size) {
-      for (const name of definedComponents(text)) {
-        const variantOf = (f) => variants.find((v) => underAny(f, [v])) ?? null;
-        const elsewhere = (componentsByName.get(name) ?? []).filter((c) => !samePath(c.file, file))
-          // a registry keeps the same component in sibling variants, and a
-          // block installs alone: neither is a second Button
-          .filter((c) => !(variantOf(file) && variantOf(c.file) && variantOf(c.file) !== variantOf(file)))
-          .filter((c) => !(underAny(file, blockDirs) && underAny(c.file, blockDirs)));
-        if (!elsewhere.length) continue;
-        const best = [...elsewhere].sort((a, b) => b.usageCount - a.usageCount)[0];
-        findings.push({
-          file, line, kind: 'component', value: name,
-          // never open the advice with the path: the report capitalises the
-          // first letter, and a capitalised path is the wrong path
-          advice: elsewhere.length > 1
-            ? `${elsewhere.length} other files define it too; import ${best.file}, the one the codebase leans on`
-            : `import ${best.file} rather than starting a second one${best.usageCount ? `, which ${best.usageCount} place${best.usageCount === 1 ? '' : 's'} already do` : ''}`,
-        });
-      }
-    }
+    if (!css) findings.push(...secondCopies(file, line, text));
 
     for (const a of seen.arbitrary) {
       findings.push({

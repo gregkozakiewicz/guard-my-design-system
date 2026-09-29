@@ -1,5 +1,36 @@
 # Changelog
 
+## 2.2.0 — 29 Sep 2026
+
+The engine moves to roast 9.2.1. The guard now gives the report's answer on
+what a second copy of a component is. It goes quiet in four places where it
+was wrong, and speaks in two where it was silent, so a change that was clean
+under 2.1 can now carry a `component` finding.
+
+No longer flagged:
+
+- **A name that repeats by design.** A route file in a TanStack Router or
+  Remix app exports `Route`, and every page has one. The guard read a new
+  page as a duplicate and told the pull request to import another page's
+  route. A framework's `Route`, `Layout`, `App` or `Provider`, a route file,
+  the crash page, a story and an email template repeat by design.
+- **What the report lists without counting.** A wrapper built on the
+  component it shares a name with, two icon libraries carrying the same
+  glyph, shadcn's own overlap inside the catalogue.
+- **A file with no markup in it.** A stub returning null, or a TypeScript
+  file whose generics read like tags.
+
+Now flagged:
+
+- **A second copy inside a file whose styling is exempt.** A drawing, a
+  crash page or a render-to-image surface is excused its colours, because
+  the medium allows nothing else. A second `Logo` is still a second `Logo`,
+  and the report counts it. Only the `component` finding is raised there;
+  the styling stays unjudged.
+- **A web component registered a second time.** Stencil, Lit and
+  `customElements.define` components are in the report's ledger, and the
+  guard could not see them.
+
 ## 2.1.0 — 29 Sep 2026
 
 The engine moves to roast 9.2.0. Two new things are judged, so a change that

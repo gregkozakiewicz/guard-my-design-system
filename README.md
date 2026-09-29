@@ -62,7 +62,11 @@ it updates that same comment. It never adds more comments:
   gives the import line. Rows, tabs, close crosses and select triggers
   built on a button tag are left alone.
 - **A second definition of a component you already have.** The finding names
-  the file that already defines it, and how many places use that one.
+  the file that already defines it, and how many places use that one. Web
+  components registered by tag count too. What a copy is, is the roast
+  report's answer: a framework's `Route` or `Layout`, a page, a story, an
+  email template and a wrapper built on the component it shares a name with
+  are not second copies.
 - **A new import of a duplicate component.** When a name is defined in more
   than one file and one copy is clearly the main one, importing another copy
   is flagged. The finding names the main copy, how often each is used, and
@@ -239,8 +243,9 @@ updating PR comment works on GitHub only, for now.
   picture drawn with code. A canvas renderer draws pixels. A file that draws
   SVG is artwork, not interface. The guard reads that list from the roast
   engine rather than keeping its own, so the two can never drift apart and
-  give you different answers about the same file. Defining a new token is
-  extending the system, not a problem.
+  give you different answers about the same file. The exemptions are about
+  styling: a second `Logo` is still a second `Logo`, and is flagged. Defining
+  a new token is extending the system, not a problem.
 - **Every finding comes with a fix.** The guard names the on-system value the
   author probably meant, so most fixes take under a minute and no meeting.
 
