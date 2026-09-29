@@ -40,7 +40,9 @@ it updates that same comment. It never adds more comments:
 ## What it catches
 
 - **A hard-coded colour where a token exists.** The finding names the token:
-  `var(--blue-500)`, not just a hex code. This works across colour notations:
+  `var(--blue-500)`, not just a hex code. A token's own value pasted into a
+  component or a stylesheet counts too: the finding says use the name, not
+  the value. This works across colour notations:
   a hex stray is matched to an hsl or oklch token, including shadcn's
   bare-triplet variables. Dark-theme values count as the system too, so a
   stray in a dark block snaps to the dark token, never its light twin.
@@ -54,6 +56,11 @@ it updates that same comment. It never adds more comments:
 - **An inline `style={{ }}` block.** Styling written there is invisible to the
   system and to every agent that reads the file. Blocks built from variables
   are decided elsewhere, so they are left alone.
+- **A button built from scratch where the repo already has a Button.** A
+  styled button, or a button tag dressed as one, in a file whose package
+  can import a Button that at least 20 files already use. The finding
+  gives the import line. Rows, tabs, close crosses and select triggers
+  built on a button tag are left alone.
 - **A second definition of a component you already have.** The finding names
   the file that already defines it, and how many places use that one.
 - **A new import of a duplicate component.** When a name is defined in more

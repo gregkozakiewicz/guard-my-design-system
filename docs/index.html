@@ -68,6 +68,7 @@
 <li><b>A typeface the system does not declare</b>, an <b>!important</b>, an <b>arbitrary Tailwind value</b> that sidesteps the scale.</li>
 <li><b>A colour or a pixel size written onto a kit component.</b> On a product built on MUI, Mantine, Chakra UI or Ant Design, a hex in an sx prop is flagged with what the theme says about it, and a pixel size becomes the theme's spacing step, in the kit's own words.</li>
 <li><b>A new colour token that copies an existing one</b>, with the existing token named, and <b>a new import of a duplicate component</b> where one copy is clearly the main one, with that copy named.</li>
+<li><b>A button built from scratch where the repo already has a Button</b>, with the import line to use. A token's own value pasted where its name belongs is caught the same way: use the name, not the value.</li>
 <li><b>One sticky comment per pull request</b>, updated in place as fixes land. It counts down instead of piling up, because nothing gets a tool uninstalled faster than spam.</li>
 <li><b>Strict mode as the one setting.</b> The check fails instead of commenting, for teams that want the door to actually lock.</li>
 <li><b>No config files, no rules to write, no tokens to register.</b> It learns your system by scanning your repo with the roast-my-design-system engine — CSS, SCSS, styled components, and Lit or Stencil web components alike. Your codebase is the rulebook.</li>

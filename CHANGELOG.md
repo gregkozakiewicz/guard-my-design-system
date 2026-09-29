@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.1.0 — 29 Sep 2026
+
+The engine moves to roast 9.2.0. Two new things are judged, so a change that
+was clean under 2.0 can now carry findings; nothing that was flagged before
+is flagged differently.
+
+- **A token's value pasted where its name belongs.** A hex that equals a
+  token used to pass as disciplined token use. It is the value copied into
+  the place the name belongs, and the next reader copies the hex. It is
+  now a `color` finding: "this is already the token var(--blue-500),
+  #3b6fe0; use the name, not the value". On a product built on a kit the
+  advice points at the theme file instead, since a kit theme has no
+  variable to offer. The files that state the palette (a token stylesheet,
+  a Tailwind config, a kit theme, a palette file) are exempt: defining a
+  token is still not a sin.
+- **A button built from scratch where the repo already has a Button.**
+  New kind `handmade-button`, in the engine's words: a styled button or a
+  button tag dressed as a button (real padding, a background or a border,
+  and a label style such as a font weight) in a file whose own package can
+  import a Button that at least 20 files already import. The finding
+  gives the import line: "A styled button (StyledConnectButton) where the
+  repo already has <Button> (imported 274x from twenty-ui/input). Use
+  import { Button } from 'twenty-ui/input'. If it needs a kind the Button
+  lacks, add a variant there rather than a new button here." Rows, tabs,
+  close crosses, select triggers, option cards and icon squares built on
+  a button tag are left alone. In a monorepo the Button is the one the
+  file's package can import, never another app's.
+- **Usage counts credit the right copy.** When two components share a name
+  across packages, an import by workspace package name or by a tsconfig
+  path alias now credits the copy inside the named folder, and packages
+  declared one level down (a Go root with a webapp folder) are found. This
+  changes which copy the duplicate-import rule calls the main one on some
+  monorepos, in the honest direction.
+
 ## 2.0.0 — 25 Sep 2026
 
 The engine moves to roast 9.0.0. A major because the engine's own major

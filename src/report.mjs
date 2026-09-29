@@ -26,11 +26,14 @@ const KIND_LABEL = {
   // painting by hand where the repo keeps none
   'chart-colour': 'chart colour written by hand',
   'chart-palette': 'chart painted by hand',
+  // a styled.button or a dressed button tag where the repo has a Button
+  // (roast 9.2.0); the engine's sentence names the Button and its import
+  'handmade-button': 'button built from scratch',
 };
 const labelOf = (f) => f.label ?? KIND_LABEL[f.kind];
 
 // Kinds whose label already says everything; printing the value repeats it.
-const VALUELESS = new Set(['important', 'inline', 'twin-token', 'avoided-copy', 'chart-palette']);
+const VALUELESS = new Set(['important', 'inline', 'twin-token', 'avoided-copy', 'chart-palette', 'handmade-button']);
 
 const FOOTER = 'Full picture of the whole codebase: `npx roast-my-design-system`';
 

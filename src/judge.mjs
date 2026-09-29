@@ -13,7 +13,7 @@ import {
   definedComponents, exemptReason,
   EXTRA_KINDS, extraValue, fontDeclarations,
   WIDGET_CSS_RE, isLibraryClass, PALETTE_CLASS_RE, blankComments, kitPaintFindings,
-  tokenTwinFindings, avoidedImportFindings, isChartFile, chartFindings,
+  tokenTwinFindings, avoidedImportFindings, isChartFile, chartFindings, handmadeButtonFindings,
 } from 'roast-my-design-system/engine';
 
 // Folder membership, the way the engine's own splits do it.
@@ -163,6 +163,9 @@ export function judge(added, system, { readFile, readBase } = {}) {
   }
   // "use var(--blue-500)", not "go hunt this hex": name a value when the
   // system defines it as a custom property.
+  const statesTokens = (file) => (system.tokenSources ?? []).some((t) => samePath(t, file));
+  // on a kit repo the theme is where a colour is decided (mcp/knowledge reads it the same way)
+  const themeFile = system.profile?.kit?.themeFiles?.[0] ?? system.tokenFile ?? null;
   const named = (value) => {
     // shadcn-style tokens are defined as bare triplets (--primary: 222.2 47.4%
     // 11.2%) but normalised to hsl(...); try the unwrapped form too.
@@ -259,7 +262,21 @@ export function judge(added, system, { readFile, readBase } = {}) {
 
     for (const c of seen.colors) {
       if (onKit || chart) break; // the kit rule or the chart rule owns colours here
-      if (tokenSet.has(c.value)) continue; // disciplined token use
+      if (tokenSet.has(c.value)) {
+        // A token's raw value is the definition only inside a file that
+        // states the palette (system.tokenSources, roast 9.1.3). Anywhere
+        // else it is the value pasted where the name belongs: the system
+        // cannot see it, and the next reader copies the hex.
+        if (!system.tokenSources || statesTokens(file)) continue;
+        const n = named(c.value);
+        findings.push({
+          file, line, kind: 'color', value: c.value,
+          advice: n !== c.value
+            ? `this is already the token ${n}; use the name, not the value`
+            : `the theme already holds this value${themeFile ? ` (${themeFile})` : ''}; read it from there rather than pasting it`,
+        });
+        continue;
+      }
       const near = c.value.startsWith('#') ? nearestColor(c.value, system.tokens) : null;
       findings.push({
         file, line, kind: 'color', value: c.value,
@@ -414,7 +431,13 @@ export function judge(added, system, { readFile, readBase } = {}) {
           others: system.tokenDefs.filter((d) => !samePath(d.file, file)),
           tailwind: prof.kind === 'tailwind' || /@theme\b/.test(w),
         }) : [])
-      : (system.duplicates ? avoidedImportFindings(w, { file, before: baseText(file), dupes: system.duplicates }) : []);
+      : [
+        ...(system.duplicates ? avoidedImportFindings(w, { file, before: baseText(file), dupes: system.duplicates }) : []),
+        // a button built from scratch where the file's own package can
+        // import the repo's Button (roast 9.2.0); a warning in the engine,
+        // a finding here, on the line the button starts
+        ...(system.buttons?.length ? handmadeButtonFindings(w, { file }, system) : []),
+      ];
     for (const f of hits) {
       const line = lineAt(w, f.index);
       if (!lines.has(line)) continue;

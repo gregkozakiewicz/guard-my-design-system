@@ -488,10 +488,13 @@ function makeMui() {
   const r2 = run(dir);
   ok(r2.findings.some((f) => f.kind === 'color' && f.file.endsWith('Plain.tsx')), 'a colour off the kit is still a new colour');
   ok(!r2.findings.some((f) => f.kind === 'color' && f.file.endsWith('New.tsx')), 'a kit file is not reported twice for the same colour');
-  // a theme colour used in a stylesheet is on-system on a kit repo
+  // a theme colour pasted raw into a stylesheet is the value where the theme's
+  // name belongs (guard 2.1.0, the rule roast 9.1.3 adopted); the advice
+  // points at the theme file, since a kit theme has no var() to offer
   writeFileSync(join(dir, 'src/site.css'), '.x { color: #667085; }\n');
   const r3 = run(dir);
-  ok(!r3.findings.some((f) => f.file.endsWith('site.css')), 'the theme\'s colours are the token set on a kit repo');
+  const pasted = r3.findings.find((f) => f.file.endsWith('site.css'));
+  ok(pasted?.kind === 'color' && pasted.advice.startsWith('the theme already holds this value (src/theme/theme.ts)'), `a theme value pasted into a stylesheet points at the theme (${pasted?.advice})`);
   rmSync(dir, { recursive: true, force: true });
 }
 
@@ -615,6 +618,56 @@ console.log('charts:');
   // a chart that reads the palette is clean
   writeFileSync(join(dir2, 'components/Donut.tsx'), "import { Bar } from 'recharts';\nexport const Donut = () => <Bar fill=\"var(--chart-primary)\" />;\n");
   ok(run(dir2).findings.length === 0, 'a chart that reads the palette is clean');
+  rmSync(dir2, { recursive: true, force: true });
+}
+
+// ---- a token's value pasted where its name belongs (roast 9.1.3 / guard 2.1.0) ----
+console.log('token value pasted:');
+{
+  const dir = makeRepo();
+  // a new stylesheet using the token's hex instead of var(--blue-500)
+  writeFileSync(join(dir, 'styles/hero.css'), '.hero { color: #3b6fe0; }\n');
+  const r = run(dir);
+  const f = r.findings.find((x) => x.kind === 'color' && x.value === '#3b6fe0');
+  ok(!!f, 'a token value pasted into a stylesheet is a finding');
+  ok(f?.advice.includes('var(--blue-500)') && f?.advice.includes('use the name'), `the advice names the token and says use the name (${f?.advice})`);
+  // the same value in a component
+  writeFileSync(join(dir, 'components/Hero.tsx'), 'export const Hero = () => <div style={{ color: "#3b6fe0", padding: "12px" }}>x</div>;\n');
+  const r2 = run(dir);
+  ok(r2.findings.some((x) => x.kind === 'color' && x.value === '#3b6fe0' && x.file.endsWith('Hero.tsx')), 'and in a component');
+  // the token file restating its own values is not
+  appendFileSync(join(dir, 'styles/site.css'), '--blue-500-dup: #3b6fe0;\n');
+  const r3 = run(dir);
+  ok(!r3.findings.some((x) => x.kind === 'color' && x.file.endsWith('site.css')), 'a token file stating a value is not a pasted value');
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ---- a button built from scratch where the repo has a Button (roast 9.2.0 / guard 2.1.0) ----
+console.log('hand-made button:');
+{
+  const dir = makeRepo();
+  mkdirSync(join(dir, 'pages'), { recursive: true });
+  for (let i = 0; i < 22; i++) writeFileSync(join(dir, `pages/Page${i}.tsx`), "import { Button } from '../components/Button';\nexport const P = () => <Button>go</Button>;\n");
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'pages');
+  const PAGE = "import styled from '@emotion/styled';\nconst StyledConnectButton = styled.button`\n  background: var(--blue-500);\n  color: white;\n  padding: 8px 14px;\n  font-weight: 600;\n`;\nexport const Settings = () => <StyledConnectButton>Connect</StyledConnectButton>;\n";
+  writeFileSync(join(dir, 'pages/Settings.tsx'), PAGE);
+  const r = run(dir);
+  const f = r.findings.find((x) => x.kind === 'handmade-button');
+  ok(!!f, 'a styled button next to a well-used Button is a finding');
+  ok(f?.line === 2, `on the line the button starts (${f?.line})`);
+  ok(f?.advice.includes("import { Button } from '../components/Button'"), `the advice gives the import line (${f?.advice})`);
+  ok(!r.findings.some((x) => x.kind === 'color'), 'its token colours are not also flagged');
+  const line = execFileSync('node', [CLI, dir, '--base', 'HEAD'], { encoding: 'utf8' }).split('\n').find((l) => l.includes('button built from scratch'));
+  ok(!!line && !line.includes('undefined') && line.includes('StyledConnectButton'), `the terminal line reads whole (${line?.trim().slice(0, 90)})`);
+  // a row on a button tag is not
+  writeFileSync(join(dir, 'pages/Settings.tsx'), "import styled from '@emotion/styled';\nconst StyledRow = styled.button`\n  background: none;\n  border: none;\n  padding: 0;\n`;\nexport const S = () => <StyledRow>x</StyledRow>;\n");
+  ok(!run(dir).findings.some((x) => x.kind === 'handmade-button'), 'a reset row on a button tag is not');
+  // with the Button barely used, the repo has no answer and stays silent
+  const dir2 = makeRepo();
+  writeFileSync(join(dir2, 'components/Settings.tsx'), PAGE);
+  ok(!run(dir2).findings.some((x) => x.kind === 'handmade-button'), 'no well-used Button, no finding');
+  rmSync(dir, { recursive: true, force: true });
   rmSync(dir2, { recursive: true, force: true });
 }
 
