@@ -150,6 +150,31 @@ console.log('exemptions:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+{
+  // an icon set names its files for what they show (roast 9.2.5): an icon in
+  // an icons folder is artwork, and it is not a second copy of the component
+  // it is named after
+  const dir = makeRepo();
+  mkdirSync(join(dir, 'components/ui'), { recursive: true });
+  writeFileSync(join(dir, 'components/ui/Switch.tsx'),
+    'export const Switch = (props) => <button role="switch" className="switch" {...props} />;\n');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'switch');
+  mkdirSync(join(dir, 'packages/icons/src'), { recursive: true });
+  writeFileSync(join(dir, 'packages/icons/src/Switch.tsx'),
+    'export const Switch = (props) => <svg viewBox="0 0 24 24" {...props}><path fill="#3B82F6" d="M4 12h16" /></svg>;\n');
+  const r = run(dir);
+  ok(r.findings.length === 0, `an icon in an icons folder is artwork, not a second Switch (got ${r.findings.map((f) => f.kind).join(', ') || 'none'})`);
+
+  // a second Switch that is interface is still a second copy
+  mkdirSync(join(dir, 'components/settings'), { recursive: true });
+  writeFileSync(join(dir, 'components/settings/Switch.tsx'),
+    'export const Switch = (props) => <button role="switch" className="switch" {...props} />;\n');
+  const r2 = run(dir);
+  ok(r2.findings.some((f) => f.kind === 'component' && f.file.includes('settings/Switch')), 'a second Switch component is still a second copy');
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ---- markdown output ----
 console.log('markdown:');
 {

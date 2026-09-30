@@ -243,7 +243,8 @@ updating PR comment works on GitHub only, for now.
   one, by its email kit, its markup or the email folder it sits in, not when
   its name mentions email: a sign-in form is judged like any screen. An OG card or a PDF invoice is a
   picture drawn with code. A canvas renderer draws pixels. A file that draws
-  SVG is artwork, not interface. The guard reads that list from the roast
+  SVG as an icon, a logo or an illustration is artwork, not interface, and an
+  icon is never a second copy of the component it is named after. The guard reads that list from the roast
   engine rather than keeping its own, so the two can never drift apart and
   give you different answers about the same file. The exemptions are about
   styling: a second `Logo` is still a second `Logo`, and is flagged. Defining

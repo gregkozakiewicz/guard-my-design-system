@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.3.1 — 30 Sep 2026
+
+The engine moves to roast 9.2.5. The guard flags less, never more: nothing
+that was clean under 2.3 carries a finding now.
+
+- **An icon in an icons folder is artwork, whatever it is called.** An icon
+  set names its files after what they show (`ActionSendEmail.tsx`,
+  `Server.tsx`), so a pull request that added an icon was told its colours
+  were off the system. A file that draws SVG inside an icons, logos or
+  illustrations folder is now artwork. A plain component in one of those
+  folders is still judged.
+- **An icon is not a second copy of a component.** A `Switch` icon added
+  beside the repo's `Switch` component was flagged as a second copy. An icon
+  now counts as a copy only against another drawing of the same thing, so
+  the same logo drawn twice is still flagged, and so is a second `Switch`
+  component.
+
 ## 2.3.0 — 30 Sep 2026
 
 The engine moves to roast 9.2.3. A screen about email is now judged, so a
