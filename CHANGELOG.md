@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.3.3 — 30 Sep 2026
+
+The engine moves to roast 9.3.2. The guard flags less, never more.
+
+- **A story, an example or a demo is not flagged for palette classes.** The
+  report leaves those folders out of its count of colours taken from outside
+  the theme, but the guard flagged a `text-slate-500` in a story. It now asks
+  the engine which folders are demos, so the two agree about the same file.
+- **A page a headless browser prints to a PDF is not judged.** A repo that
+  renders React to HTML and prints it with puppeteer writes that page's
+  styling inline, because the page loads none of the app's stylesheets, like
+  an email. The engine finds those pages from the file that prints them, and
+  the guard reads that from the engine.
+- **A command-line tool's templates are not part of the system the guard
+  learns** (roast 9.3.1), like the starter templates in 2.3.2.
+
 ## 2.3.2 — 30 Sep 2026
 
 The engine moves to roast 9.2.6. The guard flags less, never more.

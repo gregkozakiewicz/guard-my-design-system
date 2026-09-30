@@ -191,6 +191,23 @@ console.log('exemptions:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+{
+  // a page a headless browser prints to a PDF (roast 9.3.2): its styling is
+  // inline because the page loads none of the app's stylesheets
+  const dir = makeRepo();
+  mkdirSync(join(dir, 'server/src/pdf/templates'), { recursive: true });
+  writeFileSync(join(dir, 'server/package.json'), '{ "name": "server", "dependencies": { "puppeteer": "23.0.0" } }\n');
+  writeFileSync(join(dir, 'server/src/pdf/service.ts'),
+    "import puppeteer from 'puppeteer';\nimport { renderToStaticMarkup } from 'react-dom/server';\nimport { Report } from './templates/Report.js';\nexport const pdf = async () => { renderToStaticMarkup(Report()); return puppeteer.launch(); };\n");
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'pdf service');
+  writeFileSync(join(dir, 'server/src/pdf/templates/Report.tsx'),
+    'export const Report = () => <main style={{ color: "#ff8800", padding: "13px" }}>Weekly report</main>;\n');
+  const r = run(dir);
+  ok(r.findings.length === 0, `a page printed to a PDF by a headless browser is not judged (got ${r.findings.map((f) => f.kind).join(', ') || 'none'})`);
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ---- markdown output ----
 console.log('markdown:');
 {
@@ -576,6 +593,17 @@ function makeKit() {
   writeFileSync(join(dir, 'app/page.tsx'), 'export default function Page() {\n  return <main className="p-6 text-slate-500">{/* bg-blue-500 */}hi</main>;\n}\n');
   const r4 = run(dir);
   ok(r4.findings.filter((f) => f.kind === 'palette').map((f) => f.value).join() === 'text-slate-500', 'the class outside the comment on the same line is still flagged');
+  // a story is a demo: the report leaves it out of the palette count, and so
+  // does the guard (roast 9.3.2); a templates screen in the product is judged
+  git(dir, 'checkout', '-q', '--', 'app/page.tsx');
+  mkdirSync(join(dir, 'components/stories'), { recursive: true });
+  writeFileSync(join(dir, 'components/stories/Badge.tsx'), 'export const Badge = () => <span className="text-slate-500">demo</span>;\n');
+  mkdirSync(join(dir, 'app/templates'), { recursive: true });
+  writeFileSync(join(dir, 'app/templates/Picker.tsx'), 'export const Picker = () => <div className="bg-blue-500">pick</div>;\n');
+  const r5 = run(dir);
+  const p5 = r5.findings.filter((f) => f.kind === 'palette');
+  ok(!p5.some((f) => f.file.includes('stories/')), `a palette class in a story is not flagged (got ${p5.map((f) => f.file).join(', ') || 'none'})`);
+  ok(p5.some((f) => f.file.includes('app/templates/')), 'a palette class in a templates screen of the product is flagged');
 }
 
 // ---- a product built on a kit (roast 8.4.6): the kit check ----

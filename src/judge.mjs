@@ -12,7 +12,7 @@ import {
   isCodeFile, isStyleFile, typefaceOf, GENERIC_FONTS,
   definedComponents, componentNamesIn, duplicateCopies, isPageFile, exemptReason,
   EXTRA_KINDS, extraValue, fontDeclarations,
-  WIDGET_CSS_RE, isLibraryClass, PALETTE_CLASS_RE, blankComments, kitPaintFindings,
+  WIDGET_CSS_RE, isLibraryClass, PALETTE_CLASS_RE, DEMO_PATH_RE, blankComments, kitPaintFindings,
   tokenTwinFindings, avoidedImportFindings, isChartFile, chartFindings, handmadeButtonFindings,
 } from 'roast-my-design-system/engine';
 
@@ -400,8 +400,9 @@ export function judge(added, system, { readFile, readBase } = {}) {
 
     // A palette class where a theme variable exists (a shadcn kit in
     // CSS-variable mode): paint from a tin. The same pattern the report
-    // counts per 100 files; here, per added line.
-    if (!css && prof.paletteReady) {
+    // counts per 100 files; here, per added line. A story, an example or a
+    // demo is not counted there, so it is not flagged here (roast 9.3.2).
+    if (!css && prof.paletteReady && !DEMO_PATH_RE.test(file)) {
       for (const m of codeText(file, line, text).matchAll(paletteRe)) {
         findings.push({
           file, line, kind: 'palette', value: m[0],
