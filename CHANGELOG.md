@@ -1,5 +1,40 @@
 # Changelog
 
+## 2.5.0 — 1 Oct 2026
+
+The engine moves to roast 9.4.0. A minor version: the guard flags palette
+classes on repos where it never did, and stops on one kind where it should
+not have.
+
+- **A palette colour on a repo with a Tailwind theme of its own.** Where the
+  theme names its colours (`--color-ink`, `--color-brand` in a `@theme`
+  block) and the code uses them as classes, a `text-gray-500` or a
+  `bg-amber-50` added by a change is flagged, with the theme's nearest colour
+  named as the class to use and the theme file to add one to when none fits.
+  The roast report's live checks have done this since 7.7; the guard had no
+  rule here at all, so a pull request got a different answer from the
+  agent's edit check. Measured on the last 300 changes of ten such repos:
+  two changes in a hundred get a finding, a fifth of the rate the shadcn
+  rule below produces.
+- **The shadcn rule reads the theme the way the report does.** The guard
+  used to switch it on only when the sheet named in components.json held
+  five of shadcn's rows under `:root`. That gate was shut on 11 of 48 shadcn
+  repos in the fleet where the live checks spoke: a theme written straight
+  into a `@theme` block (formbricks, supabase), rows kept in a sibling
+  package, no sheet path in the config (documenso), or a theme of the repo's
+  own with none of shadcn's rows (Nango, Ghost). All four now get the rule,
+  the last one judged against the repo's own theme.
+- **Utility-class mode stays off.** A shadcn install with `cssVariables:
+  false` keeps its palette in Tailwind classes by design, and the report
+  scores it that way. The guard already left it alone; the live checks now
+  do too.
+- **One rule, one set of words.** The rule itself moved into the engine
+  (`paletteFindings` through the doorway), so the guard, the edit check, the
+  end-of-turn review and `--check` cannot disagree about a palette class
+  again. The finding reads: `The theme names its colours in
+  src/styles/tokens.css; use text-warning as the class. If no token fits,
+  add a warning shade to the theme once and use it by name.`
+
 ## 2.4.0 — 30 Sep 2026
 
 The engine moves to roast 9.3.3. A minor version: the guard can flag a

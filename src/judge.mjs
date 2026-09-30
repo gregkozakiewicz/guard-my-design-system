@@ -12,7 +12,7 @@ import {
   isCodeFile, isStyleFile, typefaceOf, GENERIC_FONTS,
   definedComponents, componentNamesIn, duplicateCopies, isPageFile, exemptReason,
   EXTRA_KINDS, extraValue, fontDeclarations,
-  WIDGET_CSS_RE, isLibraryClass, PALETTE_CLASS_RE, DEMO_PATH_RE, blankComments, kitPaintFindings,
+  WIDGET_CSS_RE, isLibraryClass, kitPaintFindings, paletteFindings,
   tokenTwinFindings, avoidedImportFindings, isChartFile, chartFindings, handmadeButtonFindings,
 } from 'roast-my-design-system/engine';
 
@@ -112,21 +112,15 @@ export function judge(added, system, { readFile, readBase } = {}) {
     return whole.get(file);
   };
   const isWidgetFile = (file) => underAny(file, prof.widgetDirs) || WIDGET_CSS_RE.test(wholeText(file) ?? '');
-  const paletteRe = new RegExp(PALETTE_CLASS_RE.source, 'g');
-  // The added line with its comments blanked, the way the report and the
-  // live checks read a file before matching (roast 8.4.4): a class named in
-  // a comment paints nothing. Blanked from the whole file when it is at hand,
-  // so a block comment opened on an earlier line still counts as a comment.
-  const blanked = new Map();
-  const codeText = (file, lineNo, text) => {
-    const w = wholeText(file);
-    if (w == null) return blankComments(text);
-    if (!blanked.has(file)) blanked.set(file, blankComments(w).split('\n'));
-    // blanking keeps every character's place, so the file's line is the
-    // diff's line only if the lengths match; otherwise the file has moved on
-    const l = blanked.get(file)[lineNo - 1];
-    return l != null && l.length === text.length ? l : blankComments(text);
-  };
+  // The palette rule, in the engine's words (roast 9.4.0, lib/palette.mjs):
+  // which vocabulary a palette class is judged against was decided once by
+  // the profile, a Tailwind theme's own names, shadcn's, or the repo's own
+  // theme under a shadcn kit; null is the rule switched off (no theme, or
+  // shadcn in utility-class mode, where the palette is the theme). The guard
+  // used to keep a gate of its own (the configured sheet's :root rows) and
+  // was silent on 11 of 48 fleet shadcn repos where the live checks spoke.
+  const palette = prof.palette ?? null;
+  const paletteAdvice = (f) => `the theme names its colours in ${f.themeFile}; use ${f.example} as the class. ${f.fix.replace(/^Use a theme token as the class \([^)]*\)\.\s*/, '').replace(/\.$/, '')}`;
 
   // The system was learned from the tree that already CONTAINS these added
   // lines, so a new value would vouch for itself. A value is only "known"
@@ -398,16 +392,13 @@ export function judge(added, system, { readFile, readBase } = {}) {
       }
     }
 
-    // A palette class where a theme variable exists (a shadcn kit in
-    // CSS-variable mode): paint from a tin. The same pattern the report
-    // counts per 100 files; here, per added line. A story, an example or a
-    // demo is not counted there, so it is not flagged here (roast 9.3.2).
-    if (!css && prof.paletteReady && !DEMO_PATH_RE.test(file)) {
-      for (const m of codeText(file, line, text).matchAll(paletteRe)) {
-        findings.push({
-          file, line, kind: 'palette', value: m[0],
-          advice: `a theme token covers this; use it as the class (bg-primary, text-muted-foreground), or add one${prof.sheetFile ? ` to ${prof.sheetFile}` : ' to the theme'} once`,
-        });
+    // A palette class where the theme names its colours: judged on the
+    // whole file below, with the twin and import checks, so a class named
+    // in a comment opened on an earlier line still paints nothing. Without
+    // the whole file the added line stands in.
+    if (!css && palette && wholeText(file) == null) {
+      for (const f of paletteFindings(text, palette, { file })) {
+        findings.push({ file, line, kind: 'palette', value: f.value, advice: paletteAdvice(f) });
       }
     }
 
@@ -450,6 +441,14 @@ export function judge(added, system, { readFile, readBase } = {}) {
     if (!css && !isCodeFile(file)) continue;
     const w = wholeText(file);
     if (w == null) continue;
+    // the palette rule on the whole file, kept to the added lines; a story,
+    // a demo and a kit door are left out by the engine, as in the report
+    if (!css && palette) {
+      for (const f of paletteFindings(w, palette, { file })) {
+        const line = lineAt(w, f.index);
+        if (lines.has(line)) findings.push({ file, line, kind: 'palette', value: f.value, advice: paletteAdvice(f) });
+      }
+    }
     const hits = css
       ? (system.tokenDefs && w.includes('--') ? tokenTwinFindings(w, {
           before: baseText(file),

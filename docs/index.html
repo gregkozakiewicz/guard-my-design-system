@@ -67,6 +67,7 @@
 <li><b>A spacing value, border radius, font size or shadow the codebase has never used</b>, with the nearest existing value named.</li>
 <li><b>A typeface the system does not declare</b>, an <b>!important</b>, an <b>arbitrary Tailwind value</b> that sidesteps the scale.</li>
 <li><b>A colour or a pixel size written onto a kit component.</b> On a product built on MUI, Mantine, Chakra UI or Ant Design, a hex in an sx prop is flagged with what the theme says about it, and a pixel size becomes the theme's spacing step, in the kit's own words.</li>
+<li><b>A palette colour where the theme names its colours.</b> On a Tailwind theme, text-gray-500 is flagged with the theme's nearest colour named as the class to use, text-ink-quiet, and the theme file to add one to when none fits. On a shadcn repo the same, with a shadcn class named. Off on utility-class installs, where the palette is the theme.</li>
 <li><b>A new colour token that copies an existing one</b>, with the existing token named, and <b>a new import of a duplicate component</b> where one copy is clearly the main one, with that copy named.</li>
 <li><b>A button built from scratch where the repo already has a Button</b>, with the import line to use. A token's own value pasted where its name belongs is caught the same way: use the name, not the value.</li>
 <li><b>One sticky comment per pull request</b>, updated in place as fixes land. It counts down instead of piling up, because nothing gets a tool uninstalled faster than spam.</li>

@@ -848,5 +848,84 @@ console.log('hand-made button:');
   rmSync(dir2, { recursive: true, force: true });
 }
 
+// ---- the palette rule, every door (roast 9.4.0 / guard 2.5.0) ----
+// One rule in the engine, decided from what the theme holds rather than from
+// the kind. Probed on the fleet 2026-10-01: the guard had no rule on a
+// Tailwind theme, and its own gate (the configured sheet's :root rows) was
+// shut on 11 of 48 shadcn repos where the live checks spoke.
+console.log('palette rule, decided from what the theme holds:');
+{
+  const mk = (name) => { const dir = mkdtempSync(join(tmpdir(), `guard-pal-${name}-`)); git(dir, 'init', '-qb', 'main'); return dir; };
+  const commit = (dir) => { git(dir, 'add', '-A'); git(dir, 'commit', '-qm', 'base'); };
+  const CONFIG = (cssVars) => `{ "style": "base-nova", "tailwind": { "css": "app/globals.css", "baseColor": "neutral", "cssVariables": ${cssVars} }, "aliases": { "components": "@/components", "utils": "@/lib/utils", "ui": "@/components/ui" } }\n`;
+  const scaffold = (dir, cssVars = true) => {
+    for (const d of ['app', 'components/ui', 'lib', 'features']) mkdirSync(join(dir, d), { recursive: true });
+    writeFileSync(join(dir, 'package.json'), '{ "name": "kit", "dependencies": { "next": "16.0.0", "react": "19.0.0", "tailwindcss": "4.1.0" } }\n');
+    writeFileSync(join(dir, 'tsconfig.json'), '{ "compilerOptions": { "paths": { "@/*": ["./*"] } } }\n');
+    writeFileSync(join(dir, 'components.json'), CONFIG(cssVars));
+    writeFileSync(join(dir, 'lib/utils.ts'), 'export const cn = (...a) => a.join(" ");\n');
+  };
+  const doors = (dir, cls) => { for (const n of ['button', 'card', 'input', 'badge']) writeFileSync(join(dir, `components/ui/${n}.tsx`), `export function ${n[0].toUpperCase() + n.slice(1)}(p) { return <div data-slot="${n}" className="${cls}" {...p} />; }\n`); };
+  const palette = (dir) => run(dir).findings.filter((f) => f.kind === 'palette');
+
+  // 1. a Tailwind theme with no kit: the guard had no palette rule at all
+  const tw = mk('tw');
+  for (const d of ['src/styles', 'src/ui', 'src/features', 'src/stories']) mkdirSync(join(tw, d), { recursive: true });
+  writeFileSync(join(tw, 'package.json'), JSON.stringify({ name: 'tw', private: true, dependencies: { react: '^19.0.0', tailwindcss: '^4.1.0' } }) + '\n');
+  writeFileSync(join(tw, 'src/styles/tokens.css'), '@import "tailwindcss";\n@theme {\n  --color-surface: #ffffff;\n  --color-ink: #101828;\n  --color-ink-quiet: #667085;\n  --color-brand: #3b5bdb;\n  --color-warning: #d97706;\n  --color-edge: #e4e7ec;\n  --color-blue-500: #3b5bdb;\n}\n');
+  writeFileSync(join(tw, 'src/ui/Button.tsx'), 'export function Button(p) { return <button className="bg-brand text-surface border-edge" {...p} />; }\n');
+  writeFileSync(join(tw, 'src/features/Home.tsx'), 'export function Home() { return <div className="bg-surface text-ink"><p className="text-ink-quiet">x</p></div>; }\n');
+  commit(tw);
+  writeFileSync(join(tw, 'src/features/Alerts.tsx'), 'export function Alerts() { return <div className="bg-surface text-ink"><span className="text-amber-500">paused</span><span className="text-gray-500 dark:bg-black bg-blue-500">quiet</span></div>; }\n');
+  writeFileSync(join(tw, 'src/stories/Alerts.stories.tsx'), 'export const Default = () => <span className="text-amber-500">x</span>;\n');
+  const p1 = palette(tw);
+  ok(p1.map((f) => f.value).join() === 'text-amber-500,text-gray-500', `tailwind theme: palette classes are flagged; a retuned name (bg-blue-500) and dark:bg-black are not, and a story is left out (got ${p1.map((f) => `${f.file}:${f.value}`).join(', ') || 'none'})`);
+  ok(/src\/styles\/tokens\.css/.test(p1[0]?.advice ?? '') && /use text-warning as the class/.test(p1[0]?.advice ?? ''), `the advice names the theme file and the theme colour nearest by value (${p1[0]?.advice})`);
+  ok(/use text-ink-quiet as the class/.test(p1[1]?.advice ?? ''), `a palette grey is pointed at the theme's grey (${p1[1]?.advice})`);
+
+  // 2. a shadcn install whose configured sheet holds no :root rows, the rows
+  //    kept by a sibling package (formbricks): the old gate was shut here
+  const split = mk('split');
+  scaffold(split);
+  mkdirSync(join(split, 'packages/survey/styles'), { recursive: true });
+  writeFileSync(join(split, 'app/globals.css'), '@import "tailwindcss";\n@theme {\n  --color-primary: #0f172a;\n  --color-primary-foreground: #fefefe;\n  --color-muted-foreground: #64748b;\n  --color-background: #ffffff;\n  --color-foreground: #0f172a;\n  --color-border: #e2e8f0;\n}\n');
+  writeFileSync(join(split, 'packages/survey/styles/globals.css'), SHEET);
+  doors(split, 'bg-primary text-primary-foreground');
+  writeFileSync(join(split, 'app/page.tsx'), 'import { Button } from "@/components/ui/button";\nexport default function Page() { return <main className="p-6 text-foreground"><Button>ok</Button></main>; }\n');
+  commit(split);
+  writeFileSync(join(split, 'features/Members.tsx'), 'export function Members() { return <p className="text-slate-500 dark:bg-black">none</p>; }\n');
+  const p2 = palette(split);
+  ok(p2.map((f) => f.value).join() === 'text-slate-500,dark:bg-black', `shadcn with the rows in a sibling package: the contract holds and both spellings are flagged (got ${p2.map((f) => f.value).join(', ') || 'none'})`);
+  // the engine names the file that carries the rows when the configured
+  // sheet holds none (profiles/shadcn.mjs), so that is the file named here
+  ok(/packages\/survey\/styles\/globals\.css/.test(p2[0]?.advice ?? '') && /use text-foreground as the class/.test(p2[0]?.advice ?? ''), `the advice names the sheet that carries the rows and a shadcn class (${p2[0]?.advice})`);
+
+  // 3. utility-class mode: the palette is the theme, as the report scores it
+  const util = mk('util');
+  scaffold(util, false);
+  writeFileSync(join(util, 'app/globals.css'), SHEET);
+  doors(util, 'bg-zinc-900 text-zinc-50');
+  writeFileSync(join(util, 'app/page.tsx'), 'import { Button } from "@/components/ui/button";\nexport default function Page() { return <main className="p-6 text-zinc-900"><Button>ok</Button></main>; }\n');
+  commit(util);
+  writeFileSync(join(util, 'features/Members.tsx'), 'export function Members() { return <p className="text-zinc-500 dark:bg-black">none</p>; }\n');
+  ok(palette(util).length === 0, 'utility-class mode: a palette class is the kit\'s own style, not flagged');
+
+  // 4. a shadcn kit with no shadcn rows but a theme of its own (Nango, Ghost):
+  //    the theme's names are the vocabulary
+  const own = mk('own');
+  scaffold(own);
+  writeFileSync(join(own, 'app/globals.css'), '@import "tailwindcss";\n@theme {\n  --color-surface: #ffffff;\n  --color-ink: #101828;\n  --color-ink-quiet: #667085;\n  --color-brand: #3b5bdb;\n  --color-danger: #dc2626;\n  --color-edge: #e4e7ec;\n}\n');
+  doors(own, 'bg-surface text-ink border-edge');
+  writeFileSync(join(own, 'app/page.tsx'), 'import { Button } from "@/components/ui/button";\nexport default function Page() { return <main className="bg-surface text-ink p-6"><Button className="bg-brand text-surface">ok</Button><span className="text-ink-quiet border-edge">x</span></main>; }\n');
+  commit(own);
+  writeFileSync(join(own, 'features/Members.tsx'), 'export function Members() { return <p className="text-gray-500 text-red-500 dark:bg-black">none</p>; }\n');
+  const p4 = palette(own);
+  ok(p4.map((f) => f.value).join() === 'text-gray-500,text-red-500', `a shadcn kit with a theme of its own: palette classes are judged against that theme (got ${p4.map((f) => f.value).join(', ') || 'none'})`);
+  ok(/use text-ink-quiet as the class/.test(p4[0]?.advice ?? '') && /use text-danger as the class/.test(p4[1]?.advice ?? ''), `the advice names the theme's own classes (${p4.map((f) => f.advice).join(' | ')})`);
+  const md = execFileSync('node', [CLI, own, '--base', 'HEAD', '--markdown'], { encoding: 'utf8' });
+  ok(md.includes('palette colour where a theme variable exists `text-gray-500`. The theme names its colours in app/globals.css; use text-ink-quiet as the class.'), 'the PR comment reads as one sentence with the theme file and the class');
+  for (const d of [tw, split, util, own]) rmSync(d, { recursive: true, force: true });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

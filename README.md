@@ -78,9 +78,16 @@ it updates that same comment. It never adds more comments:
   token named: `--color-overdue-soft (#fff4e5) is a twin of the existing
   --color-warning-soft (#fdf5e6)`. Numbered steps such as `gray-100` and
   shadcn's own theme variables are never compared.
-- **A palette colour where a theme variable exists.** On a shadcn repo whose
-  theme file holds the variables, `text-slate-500` in the app's own code is
-  flagged and the theme file named. Off on utility-class installs.
+- **A palette colour where the theme names its colours.** On a repo with a
+  Tailwind theme of its own, `text-gray-500` is flagged with the theme's
+  nearest colour as the class to use (`text-ink-quiet`) and the theme file to
+  add one to when none fits. On a shadcn repo, `text-slate-500` in the app's
+  own code is flagged the same way, with a shadcn class named, whether the
+  theme sits under `:root`, inside a `@theme` block or in a sibling package.
+  A shadcn repo that keeps a theme of its own and none of shadcn's rows is
+  judged against that theme. Off on utility-class installs, where the
+  palette is the theme. The same rule, in the same words, as the roast
+  report's live checks.
 - **A chart colour written by hand.** A chart needs several colours that
   differ from each other, and most design systems never name them, so the
   chart rule (roast 8.8) has three answers. Where the repo keeps a chart
