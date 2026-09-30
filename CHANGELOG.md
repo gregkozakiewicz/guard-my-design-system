@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.4.0 — 30 Sep 2026
+
+The engine moves to roast 9.3.3. A minor version: the guard can flag a
+spacing, radius, font size or shadow it let through under 2.3, in one rare
+case below.
+
+- **What the guard learns comes from the same files the report reads.** The
+  guard judges a new spacing, radius, font size or shadow by whether the
+  repo already uses it. It learned that list through the report's counter,
+  which kept its own list of files to skip, apart from the rule the guard
+  and the live checks use. Now there is one rule:
+  - A file named like artwork but drawing nothing (a `StatusBadge`, an
+    `IconButton`) is interface, so the values it uses count as known. A pull
+    request reusing its padding is no longer told the value is new.
+  - An icon in an icons folder is artwork, so its values no longer count as
+    known. A pull request that copies a padding only an icon uses into a
+    component is now told it is new to the interface. Icons rarely carry
+    spacing, so this is rare.
+- Colours are not affected: the guard judges them against the repo's
+  tokens, which icons never define.
+
 ## 2.3.3 — 30 Sep 2026
 
 The engine moves to roast 9.3.2. The guard flags less, never more.

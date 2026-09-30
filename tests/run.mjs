@@ -208,6 +208,29 @@ console.log('exemptions:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+{
+  // one exemption rule for the report and the guard (roast 9.3.3): what the
+  // guard learns as "already used" comes from the same files the report reads.
+  // A plain component named like artwork is interface, so its values count;
+  // an icon in an icons folder is artwork, so its values do not.
+  const dir = makeRepo();
+  mkdirSync(join(dir, 'components/status'), { recursive: true });
+  writeFileSync(join(dir, 'components/status/StatusBadge.tsx'),
+    'export const StatusBadge = () => <span style={{ padding: "11px" }}>ok</span>;\n');
+  mkdirSync(join(dir, 'src/icons'), { recursive: true });
+  writeFileSync(join(dir, 'src/icons/Server.tsx'),
+    'export const Server = () => <svg style={{ padding: "7px" }} viewBox="0 0 16 16"><path d="M1 1h14" /></svg>;\n');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'badge and icon');
+  writeFileSync(join(dir, 'components/Card.tsx'),
+    'export const Card = () => <div className="card" style={{ margin: "11px", gap: "7px" }}>c</div>;\n');
+  const r = run(dir);
+  const spacing = r.findings.filter((f) => f.kind === 'spacing').map((f) => f.value).sort();
+  ok(!spacing.includes('11px'), `a value a StatusBadge already uses is known (got ${spacing.join(', ') || 'none'})`);
+  ok(spacing.includes('7px'), 'a value only an icon uses is new to the interface');
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ---- markdown output ----
 console.log('markdown:');
 {
