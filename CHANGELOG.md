@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.3.2 — 30 Sep 2026
+
+The engine moves to roast 9.2.6. The guard flags less, never more.
+
+- **A project generator's templates are not the product.** Code a repo hands
+  out to other people (a `starters` folder, the templates a `create-app` tool
+  or a script copies into someone else's new project) is no longer part of
+  the system the guard learns. A pull request that adds the real
+  `AppSidebar` is not told a copy already exists in
+  `scripts/cleanup-templates`. A templates folder inside the product itself
+  is still read.
+
 ## 2.3.1 — 30 Sep 2026
 
 The engine moves to roast 9.2.5. The guard flags less, never more: nothing

@@ -175,6 +175,22 @@ console.log('exemptions:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+{
+  // a project generator's templates are not the product (roast 9.2.6): the
+  // starter's spare sidebar is not a second copy of the real one
+  const dir = makeRepo();
+  mkdirSync(join(dir, 'scripts/cleanup-templates/clerk/components'), { recursive: true });
+  writeFileSync(join(dir, 'scripts/cleanup-templates/clerk/components/AppSidebar.tsx'),
+    'export const AppSidebar = () => <nav className="sidebar" />;\n');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'starter templates');
+  writeFileSync(join(dir, 'components/AppSidebar.tsx'),
+    'export const AppSidebar = () => <nav className="sidebar" />;\n');
+  const r = run(dir);
+  ok(!r.findings.some((f) => f.kind === 'component'), `a starter's template is not a second AppSidebar (got ${r.findings.map((f) => f.kind).join(', ') || 'none'})`);
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ---- markdown output ----
 console.log('markdown:');
 {
