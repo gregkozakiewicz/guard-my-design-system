@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.3.0 — 30 Sep 2026
+
+The engine moves to roast 9.2.3. A screen about email is now judged, so a
+change that was clean under 2.2 can carry findings there.
+
+- **A file is skipped as an email only when it shows it is one.** Until now
+  any file with "email" in its path was left alone: a sign-in form, the email
+  settings, an inbox. A file is now skipped when it uses an email kit,
+  carries markup only an email carries (MJML, Outlook conditionals, table
+  attributes such as `cellpadding`, react-email's `<Html>`, an HTML
+  `style=""` attribute written as text), sits in a folder named for email
+  that holds an email template, is a preview of an email or a stylesheet
+  written for one, or is email-named beside the templates it sends. The guard
+  reads where the repo keeps its emails from the engine, so it and the report
+  give one answer about the same file.
+
 ## 2.2.0 — 29 Sep 2026
 
 The engine moves to roast 9.2.1. The guard now gives the report's answer on

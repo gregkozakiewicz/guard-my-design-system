@@ -63,9 +63,11 @@ const samePath = (a, b) => a === b || a.endsWith(`/${b}`) || b.endsWith(`/${a}`)
  * Which files to leave alone. The whole file decides, not the added lines: a
  * satori import or an SVG drawing sits at the top of a file a diff may never
  * touch. readFile is how the caller hands over the working tree; without one
- * the added lines stand in, which sees less and so exempts less.
+ * the added lines stand in, which sees less and so exempts less. email is
+ * where the repo keeps its emails (roast 9.2.3): a file is an email because
+ * it is one, not because its path mentions one.
  */
-function exemptFiles(added, readFile) {
+function exemptFiles(added, readFile, email = null) {
   const text = new Map();
   for (const { file } of added) {
     if (text.has(file)) continue;
@@ -75,7 +77,7 @@ function exemptFiles(added, readFile) {
   }
   const verdict = new Map();
   return (file) => {
-    if (!verdict.has(file)) verdict.set(file, Boolean(exemptReason(file, text.get(file) ?? '')));
+    if (!verdict.has(file)) verdict.set(file, Boolean(exemptReason(file, text.get(file) ?? '', { email })));
     return verdict.get(file);
   };
 }
@@ -129,7 +131,7 @@ export function judge(added, system, { readFile, readBase } = {}) {
   // The system was learned from the tree that already CONTAINS these added
   // lines, so a new value would vouch for itself. A value is only "known"
   // if the repo uses it more times than this change added it.
-  const exempt = exemptFiles(added, readFile);
+  const exempt = exemptFiles(added, readFile, system.email ?? null);
   const addedLengths = new Map(), addedFaces = new Map();
   const addedExtras = { radius: new Map(), fontsize: new Map(), shadow: new Map() };
   for (const { file, line, text } of added) {
@@ -208,7 +210,7 @@ export function judge(added, system, { readFile, readBase } = {}) {
     if (!kit) return null;
     if (!kitJudged.has(file)) {
       const w = wholeText(file);
-      const j = w == null ? null : kitPaintFindings(w, kit, { file });
+      const j = w == null ? null : kitPaintFindings(w, kit, { file, email: system.email ?? null });
       if (!j || j.exempt) kitJudged.set(file, null);
       else {
         const byLine = new Map();

@@ -118,12 +118,35 @@ console.log('old mess ignored:');
 // ---- exempt files ----
 console.log('exemptions:');
 {
+  // an email shows it is one (roast 9.2.3): here by the table attributes only
+  // an email carries; a folder called emails no longer makes a file one
   const dir = makeRepo();
   mkdirSync(join(dir, 'emails'), { recursive: true });
   writeFileSync(join(dir, 'emails/welcome-email.tsx'),
-    'export const E = () => <td style={{color: "#ff8800", padding: "3px"}} />;\n');
+    'export const E = () => <table cellPadding="0"><tr><td style={{color: "#ff8800", padding: "3px"}} /></tr></table>;\n');
   const r = run(dir);
   ok(r.findings.length === 0, 'email templates are exempt (inline styling there is correct practice)');
+  rmSync(dir, { recursive: true, force: true });
+}
+{
+  // a template built on the team's own email layout carries no kit itself:
+  // its folder, which holds the layout, says what it is
+  const dir = makeRepo();
+  mkdirSync(join(dir, 'packages/emails'), { recursive: true });
+  writeFileSync(join(dir, 'packages/emails/Layout.tsx'),
+    'import { Html, Body } from "@react-email/components";\nexport const Layout = ({ children }) => <Html><Body>{children}</Body></Html>;\n');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-qm', 'email layout');
+  writeFileSync(join(dir, 'packages/emails/Receipt.tsx'),
+    'import { Layout } from "./Layout";\nexport const Receipt = () => <Layout><p style={{color: "#ff8800"}}>Paid</p></Layout>;\n');
+  const r = run(dir);
+  ok(r.findings.length === 0, `a template built on the team's email layout is exempt (got ${r.findings.map((f) => f.kind).join(', ') || 'none'})`);
+
+  // and a screen about email is a screen
+  writeFileSync(join(dir, 'components/EmailSettings.tsx'),
+    'export const EmailSettings = () => <div style={{color: "#ff8800"}}>Notify me</div>;\n');
+  const r2 = run(dir);
+  ok(r2.findings.some((f) => f.file.includes('EmailSettings')), 'a screen about email is judged like any screen');
   rmSync(dir, { recursive: true, force: true });
 }
 
