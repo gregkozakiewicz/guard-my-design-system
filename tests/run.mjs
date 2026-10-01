@@ -927,5 +927,21 @@ console.log('palette rule, decided from what the theme holds:');
   for (const d of [tw, split, util, own]) rmSync(d, { recursive: true, force: true });
 }
 
+// ---- the catalogue folder, file by file (roast 9.5.0 / guard 2.6.0) ----
+// A component of the team's own kept in components/ui used to be skipped as
+// installed code. Probed on the fleet 2026-10-01: 33 of 44 shadcn repos keep
+// their own components there.
+console.log('the catalogue folder, file by file:');
+{
+  const dir = makeKit();
+  writeFileSync(join(dir, 'components/ui/status-banner.tsx'), 'export function StatusBanner(p) { return <div className="px-3 text-[13px] text-slate-500" {...p} />; }\n');
+  writeFileSync(join(dir, 'components/ui/sheet.tsx'), 'export function Sheet(p) { return <div data-slot="sheet" className="translate-x-[2.5rem] text-[0.8rem] bg-blue-500" {...p} />; }\n');
+  const r = run(dir);
+  const banner = r.findings.filter((f) => f.file === 'components/ui/status-banner.tsx').map((f) => f.kind).sort().join(',');
+  ok(banner === 'arbitrary,palette', `a team component added to the catalogue folder is judged (got ${banner || 'none'})`);
+  ok(!r.findings.some((f) => f.file === 'components/ui/sheet.tsx'), 'one of shadcn\'s own components added beside it is still left alone');
+  rmSync(dir, { recursive: true, force: true });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

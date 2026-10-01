@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.6.0 — 1 Oct 2026
+
+The engine moves to roast 9.5.0. A minor version: the guard judges files it
+used to skip.
+
+- **A component of the team's own in the shadcn folder is judged.** The
+  guard left every file in the shadcn catalogue folder alone, as installed
+  code. Most teams keep components of their own there too: in the fleet, 33
+  of 44 shadcn repos do, 1,014 of 2,709 files in those folders. A pull
+  request that added a palette colour or a bracket value to one of them got
+  no finding. Now only shadcn's own components (by name, however they are
+  spelt: `Avatar.tsx` counts as shadcn's `avatar`), installed registries and
+  kit blocks are left alone. `components/ui/status-banner.tsx` is judged
+  like any other file.
+
 ## 2.5.0 — 1 Oct 2026
 
 The engine moves to roast 9.4.0. A minor version: the guard flags palette

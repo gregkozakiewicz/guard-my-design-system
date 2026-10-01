@@ -110,9 +110,11 @@ it updates that same comment. It never adds more comments:
 It reads the repo the way the roast report does. On a kit repo the theme's
 colours are the token set, and a colour the theme already holds is flagged
 on a kit component all the same: writing it by hand is the exact mistake the
-check exists for. On a shadcn repo the
-installed catalogue, installed registries and kit blocks are not judged:
-`shadcn add` is not a sin. On a repo that publishes a shadcn registry only
+check exists for. On a shadcn repo
+shadcn's own components, installed registries and kit blocks are not judged:
+`shadcn add` is not a sin. A component of the team's own kept in the same
+folder (`components/ui/status-banner.tsx`) is the team's, and is judged like
+any other file. On a repo that publishes a shadcn registry only
 the published folders are judged. `!important` in an embedded widget's
 stylesheet, or on a selector made of a library's own class names, is the
 medium and passes.

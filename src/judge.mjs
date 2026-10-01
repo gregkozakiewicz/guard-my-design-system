@@ -12,7 +12,7 @@ import {
   isCodeFile, isStyleFile, typefaceOf, GENERIC_FONTS,
   definedComponents, componentNamesIn, duplicateCopies, isPageFile, exemptReason,
   EXTRA_KINDS, extraValue, fontDeclarations,
-  WIDGET_CSS_RE, isLibraryClass, kitPaintFindings, paletteFindings,
+  WIDGET_CSS_RE, isLibraryClass, kitPaintFindings, paletteFindings, installedFile,
   tokenTwinFindings, avoidedImportFindings, isChartFile, chartFindings, handmadeButtonFindings,
 } from 'roast-my-design-system/engine';
 
@@ -105,7 +105,14 @@ export function judge(added, system, { readFile, readBase } = {}) {
   const counted = prof.registry?.countedDirs ?? [];
   const variants = prof.registry?.variants ?? [];
   const blockDirs = prof.registry?.blockDirs ?? [];
-  const outOfScope = (file) => underAny(file, installed) || (counted.length > 0 && !underAny(file, counted));
+  // Installed code is not the change's sin, file by file (roast 9.5.0): a
+  // component of the team's own kept in the shadcn catalogue folder is the
+  // team's, and judged. An engine older than 9.5.0 hands no installedFrom,
+  // and the folders stand in.
+  const isInstalled = prof.installedFrom
+    ? (file) => installedFile(prof.installedFrom, file, underAny)
+    : (file) => underAny(file, installed);
+  const outOfScope = (file) => isInstalled(file) || (counted.length > 0 && !underAny(file, counted));
   const whole = new Map();
   const wholeText = (file) => {
     if (!whole.has(file)) { let t = null; if (readFile) { try { t = readFile(file); } catch { t = null; } } whole.set(file, t); }
