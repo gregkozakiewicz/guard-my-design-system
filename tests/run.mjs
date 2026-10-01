@@ -663,11 +663,13 @@ function makeMui() {
   // another kit's component in a kit file (roast 9.7.0): that kit is named,
   // and the first kit's fix stays off it; the first kit's own element in the
   // same file keeps the first kit's words
-  writeFileSync(join(dir, 'src/components/Cells.tsx'), "import Box from '@mui/material/Box';\nimport { TableCell } from '@akamai/cds-components/react/Table';\nexport const Cells = () => (\n  <Box sx={{ p: '12px' }}>\n    <TableCell style={{ paddingLeft: '58px' }} />\n  </Box>\n);\n");
+  writeFileSync(join(dir, 'src/components/Cells.tsx'), "import Box from '@mui/material/Box';\nimport { TableCell } from '@akamai/cds-components/react/Table';\nexport const Cells = () => (\n  <Box sx={{ p: '12px' }}>\n    <TableCell style={{ paddingLeft: '58px', color: '#ff0000' }} />\n  </Box>\n);\n");
   const rk = run(dir).findings.filter((f) => f.file.endsWith('Cells.tsx') && f.kind.startsWith('kit-'));
-  const cell = rk.find((f) => f.line === 5);
+  const cell = rk.find((f) => f.line === 5 && f.kind === 'kit-px');
   ok(cell?.label === 'pixel size on an Akamai CDS component', `a value on another kit's component names that kit (got ${cell?.label})`);
   ok(cell?.advice === "it comes from @akamai/cds-components/react/Table, not MUI. Style it the way the repo styles its other Akamai CDS components. Never put one kit's styling on the other's components", `and gives the neutral rule, not the first kit's fix (got ${cell?.advice})`);
+  const cellColour = rk.find((f) => f.line === 5 && f.kind === 'kit-colour');
+  ok(cellColour?.label === 'colour written onto an Akamai CDS component' && !/\bsx\b|theme/.test(cellColour.advice), `a colour on another kit's component names that kit too (got ${cellColour?.label})`);
   ok(rk.find((f) => f.line === 4)?.advice.includes('write p: 3 in sx'), "the first kit's own element in the same file keeps its spacing step");
   rmSync(join(dir, 'src/components/Cells.tsx'));
   // a file that does not import the kit is judged by the generic rules
