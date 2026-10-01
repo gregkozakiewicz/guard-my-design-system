@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.9.0 — 1 Oct 2026
+
+The engine moves to roast 9.7.0. A minor version: some findings change
+their wording, and none are added or removed.
+
+- **A value on a second kit's component names that kit.** Some products
+  use two component kits. For example, Linode uses MUI and Akamai's
+  components. Before, a colour or a pixel size on the second kit's
+  component got the first kit's fix, such as "use the nearest step in sx",
+  which does nothing there. The guard now names the second kit and the
+  package the component comes from. It tells you to style it like the
+  repo's other components from that kit.
+
 ## 2.8.0 — 1 Oct 2026
 
 The engine moves to roast 9.6.1. A minor version: the guard flags kit
