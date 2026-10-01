@@ -987,5 +987,22 @@ console.log('class strings on the whole file:');
   rmSync(dir2, { recursive: true, force: true });
 }
 
+// ---- a team's layer over the kit (roast 9.6.1 / guard 2.8.0) ----
+// A file that imports only the team's layer (@linode/ui, metabase/ui) was
+// never judged by the kit rule: the engine's live pattern for the layer was
+// broken. Linode: 750 of 1,487 kit files judged (2026-10-01).
+console.log('a team layer over the kit:');
+{
+  const dir = makeMui();
+  mkdirSync(join(dir, 'packages/ui/src'), { recursive: true });
+  writeFileSync(join(dir, 'packages/ui/package.json'), '{ "name": "@acme/ui", "private": true }\n');
+  for (const c of ['Box', 'Stack', 'Typography']) writeFileSync(join(dir, `packages/ui/src/${c}.ts`), `export { default as ${c} } from '@mui/material/${c}';\n`);
+  git(dir, 'add', '-A'); git(dir, 'commit', '-qm', 'layer');
+  writeFileSync(join(dir, 'src/components/Banner.tsx'), "import { Box } from '@acme/ui';\nexport const Banner = () => (\n  <Box sx={{ bgcolor: '#ff0000', p: '12px' }}>x</Box>\n);\n");
+  const kinds = run(dir).findings.filter((f) => f.file === 'src/components/Banner.tsx').map((f) => f.kind).sort().join(',');
+  ok(kinds === 'kit-colour,kit-px', `a file that imports only the team's layer is judged by the kit rule (got ${kinds || 'none'})`);
+  rmSync(dir, { recursive: true, force: true });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

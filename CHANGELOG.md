@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.8.0 — 1 Oct 2026
+
+The engine moves to roast 9.6.1. A minor version: the guard flags kit
+colours and pixel sizes it used to miss.
+
+- **A file that uses the team's own layer over the kit is judged.** On a
+  product built on MUI, Mantine, Chakra UI or Ant Design, a file that
+  imports the team's wrapper around the kit (Linode's `@linode/ui`) instead
+  of the kit itself was never judged by the kit rule, because of a slip in
+  the engine. A pull request that wrote a colour or a pixel size onto a kit
+  component in such a file got no finding. On Linode that was about half
+  the kit files.
+
 ## 2.7.0 — 1 Oct 2026
 
 The engine moves to roast 9.6.0. A minor version: the guard flags bracket
