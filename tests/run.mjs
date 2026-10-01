@@ -943,5 +943,49 @@ console.log('the catalogue folder, file by file:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+// ---- class strings on the whole file (roast 9.6.0 / guard 2.7.0) ----
+// A bracket value inside cn() or cva() was invisible to the guard: the engine
+// read className only, and the guard reads one added line at a time while a
+// cn() call usually runs over several lines. Probed 2026-10-01: 3,794 such
+// values in 66 fleet repos, 88% on a line after the call opens.
+console.log('class strings on the whole file:');
+{
+  const dir = makeKit();
+  const probe = [
+    'import { cn } from "@/lib/utils";',                                        // 1
+    'import { cva } from "class-variance-authority";',                          // 2
+    'const v = cva(',                                                           // 3
+    '  "inline-flex h-[2.5rem]",',                                              // 4
+    '  { variants: { size: { sm: "w-[137px]", lg: "w-[251px]" } } },',          // 5
+    ');',                                                                       // 6
+    'export function Probe({ a }) {',                                           // 7
+    '  return (',                                                               // 8
+    '    <div className={cn("text-[14px]")}>',                                  // 9
+    '      <p className={cn(',                                                  // 10
+    '        "flex",',                                                          // 11
+    '        "text-[15px]",',                                                   // 12
+    '        a && "rounded-[9px]",',                                            // 13
+    '      )} />',                                                              // 14
+    '      <span className={`gap-2',                                            // 15
+    '        w-[73px]`} />',                                                    // 16
+    '    </div>',                                                               // 17
+    '  );',                                                                     // 18
+    '}',                                                                        // 19
+  ].join('\n') + '\n';
+  writeFileSync(join(dir, 'app/probe.tsx'), probe);
+  const got = run(dir).findings.filter((f) => f.file === 'app/probe.tsx' && f.kind === 'arbitrary').map((f) => `${f.value}@${f.line}`).sort().join(' ');
+  ok(got === '[137px]@5 [14px]@9 [15px]@12 [2.5rem]@4 [251px]@5 [73px]@16 [9px]@13', `bracket values in cva() and cn() calls over several lines are flagged, each on its own line (got ${got || 'none'})`);
+  rmSync(dir, { recursive: true, force: true });
+
+  // an edit inside a call that was already there: only the added line counts
+  const dir2 = makeKit();
+  writeFileSync(join(dir2, 'app/list.tsx'), 'import { cn } from "@/lib/utils";\nexport const L = () => (\n  <ul className={cn(\n    "grid",\n    "text-[15px]",\n  )} />\n);\n');
+  git(dir2, 'add', '-A'); git(dir2, 'commit', '-qm', 'list');
+  writeFileSync(join(dir2, 'app/list.tsx'), 'import { cn } from "@/lib/utils";\nexport const L = () => (\n  <ul className={cn(\n    "grid",\n    "text-[15px]",\n    "leading-[1.65rem]",\n  )} />\n);\n');
+  const got2 = run(dir2).findings.filter((f) => f.kind === 'arbitrary').map((f) => `${f.value}@${f.line}`).join(' ');
+  ok(got2 === '[1.65rem]@6', `an added line inside an existing call is judged, the old lines are not (got ${got2 || 'none'})`);
+  rmSync(dir2, { recursive: true, force: true });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.7.0 — 1 Oct 2026
+
+The engine moves to roast 9.6.0. A minor version: the guard flags bracket
+values it could not see.
+
+- **Bracket values inside `cn()` and `cva()` are judged.** The guard read
+  only classes written straight into `className`, and one added line at a
+  time. Most class lists built with `cn()` or `cva()` run over several
+  lines, so a bracket value inside them got no finding: in the fleet, 3,794
+  such values in 66 repos, 88% on a line after the call opens. The guard now
+  reads class strings on the whole file, the way the report does, and keeps
+  the ones on lines the change adds. An edit inside a call that was already
+  there is judged on its added lines only.
+- **Each finding sits on the class's own line**, including a class on a later
+  line of a `className` template.
+
 ## 2.6.0 — 1 Oct 2026
 
 The engine moves to roast 9.5.0. A minor version: the guard judges files it

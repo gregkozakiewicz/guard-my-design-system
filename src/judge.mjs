@@ -8,7 +8,7 @@
  * — all invisible. The guard never asks anyone to clean the past.
  */
 import {
-  extractStyling, normalizeHex, nearestColor, nearestLength,
+  extractStyling, classStringStyling, normalizeHex, nearestColor, nearestLength,
   isCodeFile, isStyleFile, typefaceOf, GENERIC_FONTS,
   definedComponents, componentNamesIn, duplicateCopies, isPageFile, exemptReason,
   EXTRA_KINDS, extraValue, fontDeclarations,
@@ -129,6 +129,56 @@ export function judge(added, system, { readFile, readBase } = {}) {
   const palette = prof.palette ?? null;
   const paletteAdvice = (f) => `the theme names its colours in ${f.themeFile}; use ${f.example} as the class. ${f.fix.replace(/^Use a theme token as the class \([^)]*\)\.\s*/, '').replace(/\.$/, '')}`;
 
+  // Class strings are read on the whole file (roast 9.6.0): a class list
+  // built with cn() or cva() usually runs over several lines, and a line read
+  // on its own never shows the call it belongs to. The values the whole file
+  // places on an added line replace what that line's own class strings gave;
+  // everything else on the line (an inline style, a raw hex) is read from the
+  // line as before. Without the whole file, or when the file has moved on
+  // from the diff, the line stands in.
+  const classLines = new Map();
+  const classOnLines = (file) => {
+    if (!classLines.has(file)) {
+      const w = wholeText(file);
+      if (w == null) classLines.set(file, null);
+      else {
+        const starts = [0];
+        for (let i = 0; i < w.length; i++) if (w[i] === '\n') starts.push(i + 1);
+        const lineOf = (index) => {
+          let lo = 0, hi = starts.length - 1;
+          while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (starts[mid] <= index) lo = mid; else hi = mid - 1; }
+          return lo + 1;
+        };
+        const byLine = new Map();
+        const found = classStringStyling(w);
+        for (const kind of ['colors', 'spacing', 'arbitrary']) {
+          for (const h of found[kind]) {
+            const ln = lineOf(h.index);
+            if (!byLine.has(ln)) byLine.set(ln, { colors: [], spacing: [], arbitrary: [] });
+            byLine.get(ln)[kind].push(h);
+          }
+        }
+        classLines.set(file, { byLine, lines: w.split('\n') });
+      }
+    }
+    return classLines.get(file);
+  };
+  const seenOn = (file, line, text, css) => {
+    const seen = extractStyling(text, { css });
+    if (css) return seen;
+    const whole = classOnLines(file);
+    if (!whole || whole.lines[line - 1] !== text) return seen;
+    const own = classStringStyling(text);
+    const minus = (all, mine) => { const at = new Set(mine.map((h) => h.index)); return all.filter((h) => !at.has(h.index)); };
+    const here = whole.byLine.get(line) ?? { colors: [], spacing: [], arbitrary: [] };
+    return {
+      ...seen,
+      colors: [...minus(seen.colors, own.colors), ...here.colors],
+      spacing: [...minus(seen.spacing, own.spacing), ...here.spacing],
+      arbitrary: [...minus(seen.arbitrary, own.arbitrary), ...here.arbitrary],
+    };
+  };
+
   // The system was learned from the tree that already CONTAINS these added
   // lines, so a new value would vouch for itself. A value is only "known"
   // if the repo uses it more times than this change added it.
@@ -139,7 +189,7 @@ export function judge(added, system, { readFile, readBase } = {}) {
     if (exempt(file) || outOfScope(file)) continue;
     const css = isStyleFile(file);
     if (!css && !isCodeFile(file)) continue;
-    for (const s of extractStyling(text, { css }).spacing) {
+    for (const s of seenOn(file, line, text, css).spacing) {
       addedLengths.set(s.value, (addedLengths.get(s.value) ?? 0) + 1);
     }
     if (css) {
@@ -289,7 +339,7 @@ export function judge(added, system, { readFile, readBase } = {}) {
     // second copy in any medium, and the report counts it.
     if (exempt(file)) { if (!css) findings.push(...secondCopies(file, line, text)); continue; }
 
-    const seen = extractStyling(text, { css });
+    const seen = seenOn(file, line, text, css);
 
     const chart = !css && isChart(file);
     if (chart) {
