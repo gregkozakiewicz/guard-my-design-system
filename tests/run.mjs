@@ -660,6 +660,16 @@ function makeMui() {
   ok(r.findings.every((f) => f.label?.includes('an MUI component')), 'the label names the kit');
   const text = execFileSync('node', [CLI, dir, '--base', 'HEAD'], { encoding: 'utf8' });
   ok(text.includes('colour written onto an MUI component #667085. The theme already holds it'), 'the terminal line reads as agreed');
+  // another kit's component in a kit file (roast 9.7.0): that kit is named,
+  // and the first kit's fix stays off it; the first kit's own element in the
+  // same file keeps the first kit's words
+  writeFileSync(join(dir, 'src/components/Cells.tsx'), "import Box from '@mui/material/Box';\nimport { TableCell } from '@akamai/cds-components/react/Table';\nexport const Cells = () => (\n  <Box sx={{ p: '12px' }}>\n    <TableCell style={{ paddingLeft: '58px' }} />\n  </Box>\n);\n");
+  const rk = run(dir).findings.filter((f) => f.file.endsWith('Cells.tsx') && f.kind.startsWith('kit-'));
+  const cell = rk.find((f) => f.line === 5);
+  ok(cell?.label === 'pixel size on an Akamai CDS component', `a value on another kit's component names that kit (got ${cell?.label})`);
+  ok(cell?.advice === "it comes from @akamai/cds-components/react/Table, not MUI. Style it the way the repo styles its other Akamai CDS components. Never put one kit's styling on the other's components", `and gives the neutral rule, not the first kit's fix (got ${cell?.advice})`);
+  ok(rk.find((f) => f.line === 4)?.advice.includes('write p: 3 in sx'), "the first kit's own element in the same file keeps its spacing step");
+  rmSync(join(dir, 'src/components/Cells.tsx'));
   // a file that does not import the kit is judged by the generic rules
   writeFileSync(join(dir, 'src/components/Plain.tsx'), 'export const Plain = () => <div style={{ color: "#ff0000" }} />;\n');
   const r2 = run(dir);
