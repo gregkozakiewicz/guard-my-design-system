@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.9.1 — 3 Oct 2026
+
+The engine moves to roast 9.7.1. A patch: findings are removed on one
+kind of repo, and none are added.
+
+- **A palette scale a Tailwind 3 config redefines is the theme.** Novu
+  points every grey at its own variables in `tailwind.config.ts`. The
+  guard flagged each grey class on a pull request as a palette class.
+  It now reads the config, as it already read a v4 `@theme` block, and
+  stays quiet on those classes. Only a config the product reads counts:
+  the root config, or one in a package that holds a tenth of the code.
+- **A grey class is never swapped for a brand colour.** On a Tailwind
+  theme the fix names the nearest theme colour. A grey class now only
+  matches a grey.
+
 ## 2.9.0 — 1 Oct 2026
 
 The engine moves to roast 9.7.0. A minor version: some findings change
