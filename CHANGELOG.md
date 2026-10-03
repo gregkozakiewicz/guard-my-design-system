@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.9.4 — 3 Oct 2026
+
+The engine moves to roast 10.1.1, which put its files back at the
+repository root. The guard imports the engine through the same alias, so
+nothing it does changes.
+
 ## 2.9.3 — 3 Oct 2026
 
 The engine moves to roast 10.1.0, which moved its files into a `plugin/`
