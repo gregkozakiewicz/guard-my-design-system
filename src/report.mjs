@@ -37,9 +37,20 @@ const VALUELESS = new Set(['important', 'inline', 'twin-token', 'avoided-copy', 
 
 const FOOTER = 'Full picture of the whole codebase: `npx roast-my-design-system`';
 
-export function terminalReport(findings) {
+// Files the change touches that the roast report does not read: a docs site,
+// examples, demos, stories, tests. Said in one line, so a silent guard on a
+// docs-only change is explained rather than taken for a pass on everything.
+function leftOutLine(leftOut = [], code = (s) => s) {
+  if (!leftOut.length) return '';
+  const n = leftOut.length;
+  const names = leftOut.slice(0, 3).map(code).join(', ') + (n > 3 ? ` and ${n - 3} more` : '');
+  return `${n} changed file${n === 1 ? ' was' : 's were'} left out, because the roast report does not read ${n === 1 ? 'it' : 'them'} (docs sites, examples, stories, tests): ${names}.`;
+}
+
+export function terminalReport(findings, { leftOut = [] } = {}) {
+  const left = leftOutLine(leftOut);
   if (!findings.length) {
-    return 'guard-my-design-system: no new mess. Nothing added in this change strays from the system.';
+    return 'guard-my-design-system: no new mess. Nothing added in this change strays from the system.' + (left ? `\n  ${left}` : '');
   }
   const lines = [`guard-my-design-system: ${findings.length} new issue${findings.length === 1 ? '' : 's'} in this change\n`];
   for (const f of findings) {
@@ -47,18 +58,21 @@ export function terminalReport(findings) {
   }
   lines.push('');
   lines.push('  Only lines added in this change were counted. The existing codebase was not judged.');
+  if (left) lines.push(`  ${left}`);
   lines.push(`  ${FOOTER.replaceAll('`', '')}`);
   return lines.join('\n');
 }
 
-export function markdownReport(findings) {
+export function markdownReport(findings, { leftOut = [] } = {}) {
+  const left = leftOutLine(leftOut, (s) => `\`${s}\``);
+  const sub = `<sub>Only added lines are checked; the existing codebase is never judged. ${left ? `${left} ` : ''}${FOOTER}</sub>`;
   if (!findings.length) {
     return [
       '**🛡 guard-my-design-system: no new mess**',
       '',
       'Nothing added in this pull request strays from the design system.',
       '',
-      `<sub>Only added lines are checked; the existing codebase is never judged. ${FOOTER}</sub>`,
+      sub,
     ].join('\n');
   }
   const out = [`**🛡 guard-my-design-system: ${findings.length} new issue${findings.length === 1 ? '' : 's'} in this pull request**`, ''];
@@ -66,7 +80,7 @@ export function markdownReport(findings) {
     out.push(`- \`${f.file}:${f.line}\` · ${labelOf(f)} ${VALUELESS.has(f.kind) ? '' : `\`${f.value}\``}`.trimEnd() + `. ${capitalise(f.advice)}.`);
   }
   out.push('');
-  out.push(`<sub>Only added lines are checked; the existing codebase is never judged. ${FOOTER}</sub>`);
+  out.push(sub);
   return out.join('\n');
 }
 

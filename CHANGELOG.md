@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.9.5 — 3 Oct 2026
+
+The engine moves to roast 10.1.4. A patch: the guard flags less, and
+nothing new.
+
+- **The guard judges only the files the roast report reads.** The report
+  leaves out docs sites, examples, demos, stories and tests. The guard
+  judged every file a change touched, so a pull request that only edited
+  a docs site could be flagged for files the report never opens. On 22
+  repos, 48% of the guard's findings sat in such files. The engine now
+  hands over the list of files it read, and the guard judges those. A
+  website folder that holds the product itself is still read and judged.
+- **The comment says what was left out.** When a change touches files the
+  report does not read, the terminal output and the pull-request comment
+  say how many and name the first three. The JSON output lists them as
+  `leftOut`.
+
 ## 2.9.4 — 3 Oct 2026
 
 The engine moves to roast 10.1.1, which put its files back at the

@@ -13,8 +13,8 @@ import { markdownReport } from '../src/report.mjs';
 const MARKER = '<!-- guard-my-design-system -->';
 
 const findingsFile = process.argv[2];
-const { findings } = JSON.parse(readFileSync(findingsFile, 'utf8'));
-const body = `${MARKER}\n${markdownReport(findings)}`;
+const { findings, leftOut = [] } = JSON.parse(readFileSync(findingsFile, 'utf8'));
+const body = `${MARKER}\n${markdownReport(findings, { leftOut })}`;
 
 const token = process.env.GITHUB_TOKEN;
 const repo = process.env.GITHUB_REPOSITORY;
@@ -22,7 +22,7 @@ const event = process.env.GITHUB_EVENT_PATH ? JSON.parse(readFileSync(process.en
 const pr = event?.pull_request?.number;
 
 if (!token || !repo || !pr) {
-  console.log(markdownReport(findings));
+  console.log(markdownReport(findings, { leftOut }));
   console.log('\nguard: not a pull request context (or no GITHUB_TOKEN), so this is printed instead of commented.');
   process.exit(0);
 }
@@ -56,7 +56,7 @@ try {
   // A fork PR's token is read-only, and a workflow without pull-requests:
   // write cannot comment either. The guard still did its job; the verdict
   // just lands in the log instead of on the pull request.
-  console.log(markdownReport(findings));
+  console.log(markdownReport(findings, { leftOut }));
   console.log(`\nguard: could not post the comment (usually a fork PR's read-only token, or the workflow is missing "pull-requests: write"). The verdict is above instead. (${e.message.split('\n')[0]})`);
   process.exit(0);
 }

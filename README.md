@@ -258,6 +258,11 @@ updating PR comment works on GitHub only, for now.
   give you different answers about the same file. The exemptions are about
   styling: a second `Logo` is still a second `Logo`, and is flagged. Defining
   a new token is extending the system, not a problem.
+- **Only the files the roast report reads.** The report leaves out docs
+  sites, examples, demos, stories and tests, because their styling is not the
+  product's. The guard leaves the same files out, using the list of files the
+  roast engine read, and its comment says how many changed files that was. A
+  website folder that holds the product itself is still read and judged.
 - **Every finding comes with a fix.** The guard names the on-system value the
   author probably meant, so most fixes take under a minute and no meeting.
 

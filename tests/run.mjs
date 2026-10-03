@@ -1016,5 +1016,27 @@ console.log('a team layer over the kit:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+// ---- only what the report reads (roast 10.1.4 / guard 2.9.5) ----
+// The report's walk leaves out docs sites, examples, stories and tests; the
+// guard judged them all the same, and 48% of its findings on 22 repos sat in
+// files the report never opens. The engine hands over the files it read.
+console.log('only what the report reads:');
+{
+  const dir = makeRepo();
+  const stray = (name) => `export const ${name} = () => <div style={{color: "#4a7be8"}}>hi</div>;\n`;
+  const out = ['components/Card.stories.tsx', 'components/stories/Demo.tsx', 'docs/site/Hero.tsx', 'examples/app/Page.tsx'];
+  for (const f of [...out, 'components/Card.tsx']) {
+    mkdirSync(dirname(join(dir, f)), { recursive: true });
+    writeFileSync(join(dir, f), stray(f.split('/').pop().split('.')[0]));
+  }
+  const r = run(dir);
+  const files = [...new Set(r.findings.map((f) => f.file))].join(',');
+  ok(files === 'components/Card.tsx', `a story, a docs site and an example are not judged, the product file is (got ${files || 'none'})`);
+  ok((r.leftOut ?? []).join(',') === out.join(','), `the files left out are named (got ${(r.leftOut ?? []).join(',') || 'none'})`);
+  const said = execFileSync('node', [CLI, dir, '--base', 'HEAD', '--markdown'], { encoding: 'utf8' });
+  ok(/4 changed files were left out, because the roast report does not read them/.test(said), 'the comment says how many files were left out and why');
+  rmSync(dir, { recursive: true, force: true });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
