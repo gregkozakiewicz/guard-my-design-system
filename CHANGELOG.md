@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.9.2 — 3 Oct 2026
+
+The engine moves to roast 10.0.0. A patch for the guard: roast's major
+version is about its benchmark, which the guard does not read.
+
+- **A CSS keyword is not a typeface.** A font-family of "inherit
+  !important" counted as a typeface, so a file using it could be told it
+  added one. !important is stripped and the keywords are left out.
+- **Colour names, color-mix() and light-dark() are read** wherever the
+  engine resolves a theme value.
+
 ## 2.9.1 — 3 Oct 2026
 
 The engine moves to roast 9.7.1. A patch: findings are removed on one
