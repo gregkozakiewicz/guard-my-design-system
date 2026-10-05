@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.9.6 — 5 Oct 2026
+
+The engine moves to roast 10.1.5. A patch: the guard flags less, and
+nothing new.
+
+- **A `var()` fallback is not a new colour.** In
+  `color: var(--TextColor, #333);` the `#333` only shows if the variable
+  is missing. The line reads the theme, and the guard flagged the
+  fallback as a new colour. It no longer does, in a stylesheet, an inline
+  style or a class, and for fallbacks written as hex, `rgb()` or `hsl()`.
+  A colour written beside a fallback is still flagged. Reported in roast
+  issue #2.
+
 ## 2.9.5 — 3 Oct 2026
 
 The engine moves to roast 10.1.4. A patch: the guard flags less, and

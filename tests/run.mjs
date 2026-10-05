@@ -1038,5 +1038,21 @@ console.log('only what the report reads:');
   rmSync(dir, { recursive: true, force: true });
 }
 
+// ---- a var() fallback reads the theme (roast 10.1.5 / guard 2.9.6) ----
+// `color: var(--blue-500, #333)` shows #333 only when the variable is
+// missing. The guard flagged it as a new colour (roast issue #2).
+console.log('a var() fallback:');
+{
+  const dir = makeRepo();
+  appendFileSync(join(dir, 'styles/site.css'),
+    '.note { color: var(--blue-500, #333); background: var(--grey-100, rgb(51, 51, 51)); }\n' +
+    '.warn { color: #c81e1e; }\n');
+  writeFileSync(join(dir, 'components/Note.tsx'),
+    'export const Note = () => <p style={{ color: "var(--blue-500, #4a4a4a)" }}>hi</p>;\n');
+  const colours = run(dir).findings.filter((f) => f.kind === 'color').map((f) => f.value).join(',');
+  ok(colours === '#c81e1e', `a fallback is not a new colour, a colour written beside it still is (got ${colours || 'none'})`);
+  rmSync(dir, { recursive: true, force: true });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
