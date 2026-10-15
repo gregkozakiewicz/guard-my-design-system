@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.9.7 — 15 Oct 2026
+
+The engine moves to roast 10.2.0. A patch: the guard judges fewer files,
+and nothing new.
+
+- **Built and minified JavaScript is not judged.** A library's bundle
+  kept beside the source, or a framework's build output committed into
+  a package, is left out of the roast scan since 10.2.0, so the guard
+  leaves it out too: a change that touches `swagger-ui-bundle.js` or a
+  file with a 5,000-character line is listed among the files left out,
+  not judged.
+
 ## 2.9.6 — 5 Oct 2026
 
 The engine moves to roast 10.1.5. A patch: the guard flags less, and
